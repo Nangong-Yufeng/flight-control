@@ -1,3 +1,5 @@
+> _我一直没搞清楚这玩意充当了一个什么样的角色，希望有人搞清楚了能给我讲一讲_
+
 ## 什么是**SDK**
 - 指`Software development kit`
 - [百度](https://baike.baidu.com/item/SDK%2FAPI/9636424)
