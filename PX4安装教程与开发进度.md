@@ -2,6 +2,7 @@
 ## 一. Ubuntu, PX4, Gazebo的安装
 2022.7.5: protoc实在识别不到，所幸重装个系统，顺便写个ubuntu18.04安装PX4+ROS+Gazebo的教程.
 - 本教程在装完系统, 换完镜像源, 打完显卡驱动, 安装完clash后开始记录, 基本与大多数人进程同步. 
+- ！！！建议挂个梯子做以下内容！！！  
 ### ROS及PX4环境搭建
 1. 加入ROS安装源\
     `sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'`
