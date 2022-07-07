@@ -4,79 +4,115 @@
 - 本教程在装完系统, 换完镜像源, 打完显卡驱动, 安装完clash后开始记录, 基本与大多数人进程同步. 
 - ！！！建议挂个梯子做以下内容！！！  
 ### ROS及PX4环境搭建
-1. 加入ROS安装源\
-    `sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'`
-2. 加入密钥\
-    `sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654`
-3. 更新\
-    `sudo apt-get update`
-4. 安装ros
+1. 加入ROS安装源
+    ```sh
+    sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
     ```
+2. 加入密钥
+    ```sh
+    sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+    ```
+3. 更新
+    ```sh
+    sudo apt-get update
+    ```
+4. 安装ros
+    ```sh
     sudo apt-get install ros-melodic-desktop
     ```
 5. Source ROS
-    ```
+    ```sh
     echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
     source ~/.bashrc
     ```
-6. 安装Gazebo\
-    `sudo apt install ros-melodic-gazebo9*`
+6. 安装Gazebo
+    ```sh
+    sudo apt install ros-melodic-gazebo9*
+    ```
 7. 初始化rosdep\
-    先安装rosdep\
-    `sudo apt-get install python-rosdep`\
-    `rosdep init`\
-    `rosdep update`\
+    先安装rosdep
+    ```sh
+    sudo apt-get install python-rosdep
+    rosdep init
+    rosdep update
+    ```
     init这一步可能会报错,像这样
     ```
     ERROR: cannot download default sources list from:
     https://raw.githubusercontent.com/ros/rosdistro/master/rosdep/sources.list.d/20-default.list
     Website may be down.
-     ```
-     解决方法: https://zskitecho.blog.csdn.net/article/details/107852051?spm=1001.2101.3001.6661.1&utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1-107852051-blog-105759665.pc_relevant_multi_platform_whitelistv2&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1-107852051-blog-105759665.pc_relevant_multi_platform_whitelistv2&utm_relevant_index=1
+    ```
+    解决方法见[这个帖子](https://zskitecho.blog.csdn.net/article/details/107852051?spm=1001.2101.3001.6661.1&utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1-107852051-blog-105759665.pc_relevant_multi_platform_whitelistv2&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1-107852051-blog-105759665.pc_relevant_multi_platform_whitelistv2&utm_relevant_index=1)
 8. 安装catkin工具
-    `sudo apt-get install ros-melodic-catkin python-catkin-tools`
+    ```sh
+    sudo apt-get install ros-melodic-catkin python-catkin-tools
+    ```
 9. 安装mavros
-    `sudo apt install ros-melodic-mavros ros-melodic-mavros-extras`
+    ```sh
+    sudo apt install ros-melodic-mavros ros-melodic-mavros-extras
+    ```
 10. 安装geographiclib dataset\
-    下载脚本\
-    `wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh`\
-    为脚本添加权限\
-    `chmod +x install_geographiclib_datasets.sh`\
-    执行脚本\
-    `sudo ./install_geographiclib_datasets.sh`\
-    这一步很慢而且没有任何提示, 所以我去睡了一会()
+    下载脚本
+    ```sh
+    wget https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh
+    ```
+    为脚本添加权限
+    ```sh
+    chmod +x install_geographiclib_datasets.sh
+    ```
+    执行脚本
+    ```sh
+    sudo ./install_geographiclib_datasets.sh
+    ```
+    这一步**很慢而且没有任何提示**, 所以我去睡了一会()
 ### PX4仿真工具安装
-11. 利用脚本安装必要的工具链\
-    `wget https://raw.githubusercontent.com/PX4/Firmware/master/Tools/setup/ubuntu.sh`\
-    `wget https://raw.githubusercontent.com/PX4/Firmware/master/Tools/setup/requirements.txt`\
-    `bash ubuntu.sh`\
+11. 利用脚本安装必要的工具链
+    ```sh
+    wget https://raw.githubusercontent.com/PX4/Firmware/master/Tools/setup/ubuntu.sh
+    wget https://raw.githubusercontent.com/PX4/Firmware/master/Tools/setup/requirements.txt
+    bash ubuntu.sh
+    ```
     不知道为什么这次装得好慢(可能是因为没报错?)\
     完成后重启
-12. 创建工作空间\
-    `mkdir -p ~/catkin_ws/src`\
-    `cd ~/catkin_ws/src/`\
-    `catkin_init_workspace`
+12. 创建工作空间
+    ```sh
+    mkdir -p ~/catkin_ws/src
+    cd ~/catkin_ws/src/
+    catkin_init_workspace
+    ```
 11. 下载编译px4\
-    下载代码\
-    `cd ~/catkin_ws/`\
-    `git clone https://github.com/PX4/Firmware`\
-    然后更新submodule切换固件并编译(我直接在master编译的)\
-    `cd Firmware`\
-    `git submodule update --init --recursive`\
+    下载代码
+    ```sh
+    cd ~/catkin_ws/
+    git clone https://github.com/PX4/Firmware
+    ```
+    然后更新submodule切换固件并编译(我直接在master编译的)
+    ```sh
+    cd Firmware
+    git submodule update --init --recursive
+    ```
     这一行反复运行直到没有报错
-12. 在具体编译前还需要安装相关的工具\
-    `sudo apt-get install python-jinja2`\
-    `sudo pip install numpy toml`\
+12. 在具体编译前还需要安装相关的工具
+    ```sh
+    sudo apt-get install python-jinja2
+    sudo pip install numpy toml
+    ```
     若提示 `sudo: pip：找不到命令 `的话先安装`python-pip`
-13. 开始编译\
-    `make px4_sitl gazebo_plane`\
+13. 开始编译
+    ```sh
+    make px4_sitl gazebo_plane
+    ```
     若出现以下错误\
     `gzclient: symbol lookup error: /usr/lib/x86_64-linux-gnu/libgazebo_common.so.9: undefined symbol: _ZN8ignition10fuel_tools12ClientConfig12SetUserAgentERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE`\
-    解决方法:\
-    `sudo apt upgrade`\
-    再次编译即可成功\
-    `make clean`\
-    `make px4_sitl gazebo_plane`\
+    解决方法:
+    ```sh
+    sudo apt upgrade
+    ```
+    再次编译即可成功
+    ```sh
+    make clean
+    make px4_sitl gazebo_plane
+    ```
     至此, 启动成功, 教程结束
 
 
@@ -90,7 +126,7 @@ PX4官方文档使用的QGC所以我们暂时使用QGC作为地面站. (不过�
 *不过我们不打算使用地面站对飞机进行过多的控制, 考虑到可能会做视觉, 而且负责飞控部分的有计科人, 所以打算采用MAVSDK-python对飞控进行控制*
 ## TIPS  
 - 在启动px4+gazebo仿真前执行下列指令, 可将飞机位置变为我们学校  
-```
+```sh
 export PX4_HOME_LAT=22.588624
 export PX4_HOME_LON=113.964904
 export PX4_HOME_ALT=29
