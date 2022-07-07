@@ -84,7 +84,13 @@
 常用地面站软件有有两种: QGroundControl(QGC)和MissionPlanner(MP)\
 PX4官方文档使用的QGC所以我们暂时使用QGC作为地面站. (不过好像MP功能更强大)\
 *不过我们不打算使用地面站对飞机进行过多的控制, 考虑到可能会做视觉, 而且负责飞控部分的有计科人, 所以打算采用MAVSDK-python对飞控进行控制*
-
+## TIPS  
+- 在启动px4+gazebo仿真前执行下列指令, 可将飞机位置变为我们学校  
+```
+export PX4_HOME_LAT=22.588624
+export PX4_HOME_LON=113.964904
+export PX4_HOME_ALT=29
+```
 
 
 ---
