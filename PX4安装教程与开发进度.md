@@ -97,11 +97,14 @@ export PX4_HOME_ALT=29
 # 问题记录
 - [ ] 2022.7.4前: MAVSDK控制固定翼时, 出现了一次起飞降落一次后模式改变拒绝起飞的问题. 
     - 通过重启飞控解决, 但显然有更好的通过切换模式解决的方法. 
-       **TODO**: 寻找mavsdk切换模式的方法
-- [ ] 2022.7.4前: MAVSDK控制固定翼mission时, 因为mavsdk.mission中没有降落任务, mission upload被PX4拒绝, 原因是PX4之前的某次更新中新增了对固定翼mission的限制: 必须要有landing. 
-    - 解决方法1: 在浏览github时注意到了一些mavsdk的插件, 这个问题好像很早就被发现, 有专门的插件做mission_fixed_wing\
+       **TODO**: 寻找mavsdk切换模式的方法  
+       20220707-1719: mavsdk中没找到, 但可以直接在qgc中切换模式或者绑定按键到遥控器上. 
+- [x] 2022.7.4前: MAVSDK控制固定翼mission时, 因为mavsdk.mission中没有降落任务, mission upload被PX4拒绝, 原因是PX4之前的某次更新中新增了对固定翼mission的限制: 必须要有landing. 
+    - ~~解决方法1: 在浏览github时注意到了一些mavsdk的插件, 这个问题好像很早就被发现, 有专门的插件做mission_fixed_wing\
     https://github.com/iwishiwasaneagle/MAVSDK-Proto/tree/mission_fixed_wing \
-        **TODO**: 研究一下怎么使用
-    - 解决方法2: 二次开发飞控, 浏览过论坛和github后, 得知是参数RTL_TYPE在某次更新变为了1(对固定翼来说更安全的返航方式), 网传改成0就好了(?)
-    - 解决方法3: 使用旧版飞控, 但是也不知道是那个版本...\
-        220704-1804: https://github.com/PX4/PX4-Autopilot/issues/13107
+        **TODO**: 研究一下怎么使用~~
+    - [x] **解决方法2: 二次开发飞控, 浏览过论坛和github后, 得知是参数RTL_TYPE在某次更新变为了1(对固定翼来说更安全的返航方式), 网传改成0就好了(?)**  
+        **20220707-1718: 这个方法成功了, mission正常运行.**  
+            - [ ] 如何将修改过的PX4刷入飞控?
+    - ~~解决方法3: 使用旧版飞控, 但是也不知道是那个版本...\
+        220704-1804: https://github.com/PX4/PX4-Autopilot/issues/13107~~
