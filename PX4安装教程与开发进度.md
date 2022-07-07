@@ -10,11 +10,11 @@
     `sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654`
 3. 更新\
     `sudo apt-get update`
-4. 安装ros\
+4. 安装ros
     ```
     sudo apt-get install ros-melodic-desktop
     ```
-5. Source ROS\
+5. Source ROS
     ```
     echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
     source ~/.bashrc
