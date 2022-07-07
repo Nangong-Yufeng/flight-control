@@ -11,7 +11,9 @@
 3. 更新\
     `sudo apt-get update`
 4. 安装ros\
-    ```sudo apt-get install ros-melodic-desktop```
+    ```
+    sudo apt-get install ros-melodic-desktop
+    ```
 5. Source ROS\
     ```
     echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
