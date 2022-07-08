@@ -22,7 +22,8 @@
     ```sh
     sudo apt-get install ros-melodic-desktop
     ```
-5. Source ROS
+5. Source ROS\
+    (此处注意，使用不是bash的shell的，**要切回bash而不是将命令改掉**)。
     ```sh
     echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
     source ~/.bashrc
