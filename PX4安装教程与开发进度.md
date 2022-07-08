@@ -74,6 +74,12 @@
     ```
     不知道为什么这次装得好慢(可能是因为没报错?)\
     完成后重启
+    > 但是我报错了:cry:（可能是因为我直接没装前面的直接装px4）。  
+    > 报的错是：`由于没有公钥，无法验证下列签名 NO_PUBKEY 354e516d494ef95f`(这串数字是我网上找的)  
+    > 解决方法[见这个帖子](https://blog.csdn.net/loovejava/article/details/21837935)。
+    > 由于CSDN不登陆没法复制，我把命令**前半部分**贴在这里：  
+    > `sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys`
+    
 12. 创建工作空间
     ```sh
     mkdir -p ~/catkin_ws/src
