@@ -5,4 +5,5 @@
 - [MAVSDK-python](https://github.com/mavlink/MAVSDK-Python)  
 - [MAVSDK-Proto-mission-fixed-wing](https://github.com/iwishiwasaneagle/MAVSDK-Proto/tree/mission_fixed_wing)  
 - [mavsdk-python-tutorials](https://github.com/maponarooo/mavsdk-python-tutorials)  
-- [PX4与仿真入门教程](https://www.ncnynl.com/category/px4-sim/)  
+- [PX4与仿真入门教程](https://www.ncnynl.com/category/px4-sim/)   
+- [MAVSDK-Python API reference](http://mavsdk-python-docs.s3-website.eu-central-1.amazonaws.com/)  
