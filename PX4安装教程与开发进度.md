@@ -127,8 +127,8 @@ PX4官方文档使用的QGC所以我们暂时使用QGC作为地面站. (不过�
 ## TIPS  
 - 在启动px4+gazebo仿真前执行下列指令, 可将飞机位置变为我们学校  
 ```sh
-export PX4_HOME_LAT=22.588624
-export PX4_HOME_LON=113.964904
+export PX4_HOME_LAT=22.58670
+export PX4_HOME_LON=113.96434
 export PX4_HOME_ALT=29
 ```
 
@@ -141,7 +141,7 @@ export PX4_HOME_ALT=29
        20220707-1719: mavsdk中没找到, 但可以直接在qgc中切换模式或者绑定按键到遥控器上. 
 - [x] 2022.7.4前: MAVSDK控制固定翼mission时, 因为mavsdk.mission中没有降落任务, mission upload被PX4拒绝, 原因是PX4之前的某次更新中新增了对固定翼mission的限制: 必须要有landing. 
     - ~~解决方法1: 在浏览github时注意到了一些mavsdk的插件, 这个问题好像很早就被发现, 有专门的插件做mission_fixed_wing\
-    https://github.com/iwishiwasaneagle/MAVSDK-Proto/tree/mission_fixed_wing \
+      https://github.com/iwishiwasaneagle/MAVSDK-Proto/tree/mission_fixed_wing \
         **TODO**: 研究一下怎么使用~~
     - [x] **解决方法2: 二次开发飞控, 浏览过论坛和github后, 得知是参数RTL_TYPE在某次更新变为了1(对固定翼来说更安全的返航方式), 网传改成0就好了(?)**  
         **20220707-1718: 这个方法成功了, mission正常运行.**  
