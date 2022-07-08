@@ -8,12 +8,14 @@ from mavsdk import System
 from mavsdk.mission import *
 
 pygame.init()
-window = pygame.display.set_mode((300, 300))
+window = pygame.display.set_mode((300, 300)) # 启动pygame进行按键监听
 
 drone = System()
-pos = [[22.58927, 113.96436], [22.58739, 113.96771], [22.58680, 113.96645]]
+pos = [[22.58927, 113.96436], [22.58739, 113.96771], [22.58680, 113.96645]] # 设置标靶坐标, 这个是为了goto使用的, 但goto已经被抛弃, 所以它也可以删掉
 pos = np.array(pos)
-scout_mission = [MissionItem(22.58927,
+
+# 设置侦察任务
+scout_mission = [MissionItem(22.58927, 
                              113.96436,
                              25,
                              10,
@@ -50,6 +52,8 @@ scout_mission = [MissionItem(22.58927,
                                                                                    float('nan'),
                                                                                    float('nan'),
                                                                                    float('nan'))]
+
+# 设置打击任务1
 bomb1 = [MissionItem(22.58927,
                      113.96436,
                      25,
@@ -63,6 +67,8 @@ bomb1 = [MissionItem(22.58927,
                      float('nan'),
                      float('nan'),
                      float('nan'))]
+
+# 设置打击任务2
 bomb2 = [MissionItem(22.58739,
                      113.96771,
                      25,
@@ -76,6 +82,8 @@ bomb2 = [MissionItem(22.58739,
                      float('nan'),
                      float('nan'),
                      float('nan'))]
+
+# 设置打击任务3
 bomb3 = [MissionItem(22.58680,
                      113.96645,
                      25,
@@ -91,7 +99,7 @@ bomb3 = [MissionItem(22.58680,
                      float('nan'))]
 
 
-async def setup():
+async def setup(): # 初始化drone, 连接和检查
     """
     General configurations, setups, and connections are done here.
     :return:
@@ -112,7 +120,7 @@ async def setup():
             break
 
 
-async def main():
+async def main(): # main函数, 进行监听和任务分配
     global drone
     running = True
 
@@ -127,44 +135,60 @@ async def main():
         # While being in air and landing mode the drone is not likely to takeoff again, so
         # a condition check is required here to avoid such a condition.
 
-        if keys[pygame.K_UP] and (await print_in_air(drone) != True):
+        if keys[pygame.K_UP] and (await print_in_air(drone) != True): # 按 上 起飞
+            print("takeoff begin")
             await takeoff()
+            print("takeoff end")
 
-        elif keys[pygame.K_DOWN]:
+        elif keys[pygame.K_DOWN]: # 按 下 降落
+            print("land begin")
             await land()
+            print("land end")
 
-        elif keys[pygame.K_m] and (await print_in_air(drone) == True):
+        elif keys[pygame.K_m] and (await print_in_air(drone) == True): # 按 m 进入侦察任务
+            print("scout begin")
             await runMission(scout_mission, False)
+            print("scout end")
 
-        elif keys[pygame.K_g] and keys[pygame.K_1] and (await print_in_air(drone) == True):
+        elif keys[pygame.K_1] and (await print_in_air(drone) == True): # 按 1 前往打击点1
+            print("bomb1 begin")
             if not await drone.mission.is_mission_finished():
                 await drone.mission.pause_mission()
+                await drone.mission.clear_mission()
             await runMission(bomb1, True)
+            print("bomb1 end")
 
-        elif keys[pygame.K_g] and keys[pygame.K_2] and (await print_in_air(drone) == True):
+        elif keys[pygame.K_2] and (await print_in_air(drone) == True): # 按 2 前往打击点2
+            print("bomb2 begin")
             if not await drone.mission.is_mission_finished():
+                await drone.mission.pause_mission()
                 await drone.mission.clear_mission()
             await runMission(bomb2, True)
+            print("bomb2 end")
 
-        elif keys[pygame.K_g] and keys[pygame.K_3] and (await print_in_air(drone) == True):
+        elif keys[pygame.K_3] and (await print_in_air(drone) == True): # 按 3 前往打击点3
+            print("bomb3 begin")
             if not await drone.mission.is_mission_finished():
+                await drone.mission.pause_mission()
                 await drone.mission.clear_mission()
             await runMission(bomb3, True)
+            print("bomb3 end")
 
-        elif keys[pygame.K_RIGHT]:
+        elif keys[pygame.K_RIGHT]: # 按 右 打印是否在空中
             await print_in_air(drone)
 
-        elif keys[pygame.K_i]:
+        elif keys[pygame.K_i]: # 按 i 打印 电池, 是否在空中, gps, 位置信息
             await info(drone)
 
 
-async def goto(target):  # it's useless
-    global drone
-    if not await drone.mission.is_mission_finished():
-        await drone.mission.pause_mission()
-    print("Going to", end=" ")
-    print(target)
-    await drone.action.goto_location(target[0], target[1], 50, 0)
+# 被抛弃的goto_location函数
+# async def goto(target):  # it's useless
+#     global drone
+#     if not await drone.mission.is_mission_finished():
+#         await drone.mission.pause_mission()
+#     print("Going to", end=" ")
+#     print(target)
+#     await drone.action.goto_location(target[0], target[1], 50, 0)
 
 
 async def takeoff():
@@ -250,12 +274,12 @@ async def print_position(drone=drone):
 async def runMission(mission_items, is_back):
     global drone
 
-    print_mission_progress_task = asyncio.ensure_future(
-        print_mission_progress(drone))
+    # print_mission_progress_task = asyncio.ensure_future(
+    #     print_mission_progress(drone))
 
-    running_tasks = [print_mission_progress_task]
+    # running_tasks = [print_mission_progress_task]
     termination_task = asyncio.ensure_future(
-        observe_is_in_air(drone, running_tasks))
+        observe_is_in_air(drone))
 
     mission_plan = MissionPlan(mission_items)
 
@@ -273,35 +297,28 @@ async def runMission(mission_items, is_back):
     await termination_task
 
 
-async def print_mission_progress(drone):
+
+async def observe_is_in_air(drone):
+    """ Monitors whether the drone is flying or not and
+    returns after landing """
+
+    was_in_air = False
+    was_mission_finished = False
+    is_mission_finished = False
+
     async for mission_progress in drone.mission.mission_progress():
         print(f"Mission progress: "
               f"{mission_progress.current}/"
               f"{mission_progress.total}")
         await info(drone)
 
+        if mission_progress.current == mission_progress.total:
+            print("is_mission_finished = True")
+            is_mission_finished = True
 
-async def observe_is_in_air(drone, running_tasks):
-    """ Monitors whether the drone is flying or not and
-    returns after landing """
-
-    was_in_air = False
-
-    async for is_in_air in drone.telemetry.in_air():
-        if is_in_air:
-            was_in_air = is_in_air
-
-        if was_in_air and not is_in_air:
-            for task in running_tasks:
-                task.cancel()
-                try:
-                    await task
-                except asyncio.CancelledError:
-                    pass
+        if not was_mission_finished and is_mission_finished:
             await asyncio.get_event_loop().shutdown_asyncgens()
-
             return
-
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
