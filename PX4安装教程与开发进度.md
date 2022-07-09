@@ -98,7 +98,8 @@
     cd ~/catkin_ws/
     git clone https://github.com/PX4/Firmware
     or
-    git clone -b v1.12.3 https://github.com/PX4/Firmware.git
+    git clone -b v1.12.3 https://github.com/PX4/Firmware
+    
     注：当前默认下载PX4为1.13版本(git命令不带  -b v1.12.3),进行gazebo仿真时会出现问题，建议安装较低版本，例如v1.12.3
 	注：这里会下载Gazebo，和JMAVSim两个虚拟仿真软件，可能会造成耗时较长
     ```
