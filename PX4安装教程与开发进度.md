@@ -90,7 +90,7 @@
     ```sh
     mkdir -p ~/catkin_ws/src
     cd ~/catkin_ws/src/
-    catkin_init_workspace
+    catkin_init_workspace # 这一步要用bash做:sweat smile:,不然会找不到命令。
     ```
 11. 下载编译px4\
     下载代码
