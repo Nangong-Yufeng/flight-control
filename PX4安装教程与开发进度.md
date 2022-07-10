@@ -7,6 +7,7 @@
     - 要把每一个ros-melodic（melodic）改成ros-noetic(noetic)
     - 要把每一个python换成python3
 - 强烈建议不要用20.04，不然你就会像我一样大晚上的还在整这玩意。
+- 提到“要用bash运行命令”的，如果你不知道bash是什么，那你用的就是bash。
 
 ### ROS及PX4环境搭建
 1. 加入ROS安装源
@@ -90,7 +91,7 @@
     ```sh
     mkdir -p ~/catkin_ws/src
     cd ~/catkin_ws/src/
-    catkin_init_workspace # 这一步要用bash做:sweat smile:,不然会找不到命令。
+    catkin_init_workspace # 这一步要用bash做:sweat_smile:,不然会找不到命令。
     ```
 11. 下载编译px4\
     下载代码
