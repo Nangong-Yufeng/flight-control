@@ -91,18 +91,18 @@
     ```sh
     mkdir -p ~/catkin_ws/src
     cd ~/catkin_ws/src/
-    catkin_init_workspace # 这一步要用bash做:sweat_smile:,不然会找不到命令。
+    catkin_init_workspace # 这一步要用bash做:)...不然会找不到命令。
     ```
 11. 下载编译px4\
     下载代码
     ```sh
     cd ~/catkin_ws/
     git clone https://github.com/PX4/Firmware
-    or
+    # or
     git clone -b v1.12.3 https://github.com/PX4/Firmware
     
-    注：当前默认下载PX4为1.13版本(git命令不带  -b v1.12.3),进行gazebo仿真时会出现问题，建议安装较低版本，例如v1.12.3
-	注：这里会下载Gazebo，和JMAVSim两个虚拟仿真软件，可能会造成耗时较长
+    # 注：当前默认下载PX4为1.13版本(git命令不带  -b v1.12.3),进行gazebo仿真时会出现问题，建议安装较低版本，例如v1.12.3
+    # 注：这里会下载Gazebo，和JMAVSim两个虚拟仿真软件，可能会造成耗时较长
     ```
     然后更新submodule切换固件并编译(我直接在master编译的)
     ```sh
