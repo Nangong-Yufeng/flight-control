@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 import asyncio
 import pygame
 import numpy as np
@@ -120,7 +121,7 @@ async def setup(): # 初始化drone, 连接和检查
             break
 
 
-async def main(): # main函数, 进行监听和任务分配
+async def main():  # main函数, 进行监听和任务分配
     global drone
     running = True
 
