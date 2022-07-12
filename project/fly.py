@@ -106,7 +106,9 @@ async def setup(): # 初始化drone, 连接和检查
     :return:
     """
     global drone
-    await drone.connect(system_address="udp://:14540")
+    await drone.connect(system_address="udp://:14540") # 通过udp连接（模拟器用）
+    # await drone.connect(system_address="serial:///dev/ttyUSB0") # Ubuntu在tty*端口连接
+    # await drone.connect(system_address="serial://COM6:57600") # Windows在COM*端口连接
 
     print("Waiting for drone to connect...")
     async for state in drone.core.connection_state():
@@ -289,8 +291,9 @@ async def runMission(mission_items, is_back):
     print("-- Uploading mission")
     await drone.mission.upload_mission(mission_plan)
 
-    print("-- Arming")
-    await drone.action.arm()
+# arm不需要，因为已经起飞    
+#     print("-- Arming")
+#     await drone.action.arm()
 
     print("-- Starting mission")
     await drone.mission.start_mission()
