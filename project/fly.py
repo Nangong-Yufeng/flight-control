@@ -9,14 +9,15 @@ from mavsdk import System
 from mavsdk.mission import *
 
 pygame.init()
-window = pygame.display.set_mode((300, 300)) # 启动pygame进行按键监听
+window = pygame.display.set_mode((300, 300))  # 启动pygame进行按键监听
 
 drone = System()
-pos = [[22.58927, 113.96436], [22.58739, 113.96771], [22.58680, 113.96645]] # 设置标靶坐标, 这个是为了goto使用的, 但goto已经被抛弃, 所以它也可以删掉
+pos = [[22.58927, 113.96436], [22.58739, 113.96771],
+       [22.58680, 113.96645]]  # 设置标靶坐标, 这个是为了goto使用的, 但goto已经被抛弃, 所以它也可以删掉
 pos = np.array(pos)
 
 # 设置侦察任务
-scout_mission = [MissionItem(22.58927, 
+scout_mission = [MissionItem(22.58927,
                              113.96436,
                              25,
                              10,
@@ -28,31 +29,33 @@ scout_mission = [MissionItem(22.58927,
                              float('nan'),
                              float('nan'),
                              float('nan'),
-                             float('nan')), MissionItem(22.58739,
-                                                        113.96771,
-                                                        25,
-                                                        10,
-                                                        True,
-                                                        float('nan'),
-                                                        float('nan'),
-                                                        MissionItem.CameraAction.NONE,
-                                                        float('nan'),
-                                                        float('nan'),
-                                                        float('nan'),
-                                                        float('nan'),
-                                                        float('nan')), MissionItem(22.58680,
-                                                                                   113.96645,
-                                                                                   25,
-                                                                                   10,
-                                                                                   True,
-                                                                                   float('nan'),
-                                                                                   float('nan'),
-                                                                                   MissionItem.CameraAction.NONE,
-                                                                                   float('nan'),
-                                                                                   float('nan'),
-                                                                                   float('nan'),
-                                                                                   float('nan'),
-                                                                                   float('nan'))]
+                             float('nan')),
+                 MissionItem(22.58739,
+                             113.96771,
+                             25,
+                             10,
+                             True,
+                             float('nan'),
+                             float('nan'),
+                             MissionItem.CameraAction.NONE,
+                             float('nan'),
+                             float('nan'),
+                             float('nan'),
+                             float('nan'),
+                             float('nan')),
+                 MissionItem(22.58680,
+                             113.96645,
+                             25,
+                             10,
+                             True,
+                             float('nan'),
+                             float('nan'),
+                             MissionItem.CameraAction.NONE,
+                             float('nan'),
+                             float('nan'),
+                             float('nan'),
+                             float('nan'),
+                             float('nan'))]
 
 # 设置打击任务1
 bomb1 = [MissionItem(22.58927,
@@ -100,13 +103,13 @@ bomb3 = [MissionItem(22.58680,
                      float('nan'))]
 
 
-async def setup(): # 初始化drone, 连接和检查
+async def setup():  # 初始化drone, 连接和检查
     """
     General configurations, setups, and connections are done here.
     :return:
     """
     global drone
-    await drone.connect(system_address="udp://:14540") # 通过udp连接（模拟器用）
+    await drone.connect(system_address="udp://:14540")  # 通过udp连接（模拟器用）
     # await drone.connect(system_address="serial:///dev/ttyUSB0") # Ubuntu在tty*端口连接
     # await drone.connect(system_address="serial://COM6:57600") # Windows在COM*端口连接
 
@@ -136,24 +139,22 @@ async def main():  # main函数, 进行监听和任务分配
         keys = pygame.key.get_pressed()
 
         # While being in air and landing mode the drone is not likely to takeoff again, so
-        # a condition check is required here to avoid such a condition.
-
-        if keys[pygame.K_UP] and (await print_in_air(drone) != True): # 按 上 起飞
+        if keys[pygame.K_UP] and (await print_in_air(drone) != True):  # 按 上 起飞
             print("takeoff begin")
             await takeoff()
             print("takeoff end")
 
-        elif keys[pygame.K_DOWN]: # 按 下 降落
+        elif keys[pygame.K_DOWN]:  # 按 下 降落
             print("land begin")
             await land()
             print("land end")
 
-        elif keys[pygame.K_m] and (await print_in_air(drone) == True): # 按 m 进入侦察任务
+        elif keys[pygame.K_m] and (await print_in_air(drone) == True):  # 按 m 进入侦察任务
             print("scout begin")
             await runMission(scout_mission, False)
             print("scout end")
 
-        elif keys[pygame.K_1] and (await print_in_air(drone) == True): # 按 1 前往打击点1
+        elif keys[pygame.K_1] and (await print_in_air(drone) == True):  # 按 1 前往打击点1
             print("bomb1 begin")
             if not await drone.mission.is_mission_finished():
                 await drone.mission.pause_mission()
@@ -161,7 +162,7 @@ async def main():  # main函数, 进行监听和任务分配
             await runMission(bomb1, True)
             print("bomb1 end")
 
-        elif keys[pygame.K_2] and (await print_in_air(drone) == True): # 按 2 前往打击点2
+        elif keys[pygame.K_2] and (await print_in_air(drone) == True):  # 按 2 前往打击点2
             print("bomb2 begin")
             if not await drone.mission.is_mission_finished():
                 await drone.mission.pause_mission()
@@ -169,7 +170,7 @@ async def main():  # main函数, 进行监听和任务分配
             await runMission(bomb2, True)
             print("bomb2 end")
 
-        elif keys[pygame.K_3] and (await print_in_air(drone) == True): # 按 3 前往打击点3
+        elif keys[pygame.K_3] and (await print_in_air(drone) == True):  # 按 3 前往打击点3
             print("bomb3 begin")
             if not await drone.mission.is_mission_finished():
                 await drone.mission.pause_mission()
@@ -177,11 +178,12 @@ async def main():  # main函数, 进行监听和任务分配
             await runMission(bomb3, True)
             print("bomb3 end")
 
-        elif keys[pygame.K_RIGHT]: # 按 右 打印是否在空中
+        elif keys[pygame.K_RIGHT]:  # 按 右 打印是否在空中
             await print_in_air(drone)
 
-        elif keys[pygame.K_i]: # 按 i 打印 电池, 是否在空中, gps, 位置信息
+        elif keys[pygame.K_i]:  # 按 i 打印 电池, 是否在空中, gps, 位置信息
             await info(drone)
+        # a condition check is required here to avoid such a condition.
 
 
 # 被抛弃的goto_location函数
@@ -219,7 +221,7 @@ async def land():
 async def info(drone=drone):
     """
     This is the combination of the print_battery, print_in_air, print_gps_info, and print_position functions aimed
-    to display all of the counted data/information at the same exact time.
+    to display all the counted data/information at the same exact time.
     :param drone:
     :return:
     """
@@ -291,15 +293,14 @@ async def runMission(mission_items, is_back):
     print("-- Uploading mission")
     await drone.mission.upload_mission(mission_plan)
 
-# arm不需要，因为已经起飞    
-#     print("-- Arming")
-#     await drone.action.arm()
+    # arm不需要，因为已经起飞
+    #     print("-- Arming")
+    #     await drone.action.arm()
 
     print("-- Starting mission")
     await drone.mission.start_mission()
 
     await termination_task
-
 
 
 async def observe_is_in_air(drone):
@@ -323,6 +324,7 @@ async def observe_is_in_air(drone):
         if not was_mission_finished and is_mission_finished:
             await asyncio.get_event_loop().shutdown_asyncgens()
             return
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
