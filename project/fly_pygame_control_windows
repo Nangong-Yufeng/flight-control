@@ -66,6 +66,7 @@ latitude_deg = 0.0
 longitude_deg = 0.0
 absolute_altitude_m = 0.0
 relative_altitude_m = 0.0
+yaw_deg = 0.0
 
 
 def takeoffControl():
@@ -341,9 +342,9 @@ async def main():  # main函数, 进行监听和任务分配
 
         elif refreshCommand:  # 刷新数据
             refreshCommand = False
-            # asyncio.ensure_future(info(drone))
-            # await asyncio.sleep(0.05)
-            await info(drone)
+            asyncio.ensure_future(info(drone))
+            await asyncio.sleep(0.05)
+            # await info(drone)
 
         # elif keys[pygame.K_RIGHT]:  # 按 右 打印是否在空中
         #     await print_in_air(drone)
@@ -398,9 +399,11 @@ async def info(drone=drone):
     :param drone:
     :return:
     """
-    global flightmode, battery, in_air, gps_info, latitude_deg, longitude_deg, absolute_altitude_m, relative_altitude_m
+    global flightmode, battery, in_air, gps_info, latitude_deg, longitude_deg, absolute_altitude_m, relative_altitude_m, yaw_deg
 
     battery = await print_battery(drone)
+    flightmode = await print_flightmode(drone)
+    yaw_deg = await print_yaw_deg(drone)
     in_air = await print_in_air(drone)
     gps_info = await print_gps_info(drone)
     position = await print_position(drone)
@@ -408,7 +411,6 @@ async def info(drone=drone):
     longitude_deg = position.longitude_deg
     absolute_altitude_m = position.absolute_altitude_m
     relative_altitude_m = position.relative_altitude_m
-    flightmode = await print_flightmode(drone)
 
     return True
 
@@ -504,11 +506,11 @@ async def observe_is_in_air(drone):
             return
 
 
-async def print_roll_deg(drone):
+async def print_yaw_deg(drone):
     async for euler_angle in drone.telemetry.attitude_euler():
-        roll_deg = euler_angle.roll_deg
-        print(f"roll: {roll_deg}")
-        return roll_deg
+        yaw_deg = euler_angle.yaw_deg
+        print(f"yaw: {yaw_deg}")
+        return yaw_deg
 
 
 async def set_actuator_1(drone):
