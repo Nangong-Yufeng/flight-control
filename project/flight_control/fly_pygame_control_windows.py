@@ -122,8 +122,8 @@ def armControl():
         armCommand = True
 
 # 设置侦察任务
-scout_mission = [MissionItem(22.58927,
-                             113.96436,
+scout_mission = [MissionItem(pos[0][0],
+                             pos[0][1],
                              25,
                              10,
                              True,
@@ -135,8 +135,8 @@ scout_mission = [MissionItem(22.58927,
                              float('nan'),
                              float('nan'),
                              float('nan')),
-                 MissionItem(22.58739,
-                             113.96771,
+                 MissionItem(pos[1][0],
+                             pos[1][1],
                              25,
                              10,
                              True,
@@ -148,8 +148,8 @@ scout_mission = [MissionItem(22.58927,
                              float('nan'),
                              float('nan'),
                              float('nan')),
-                 MissionItem(22.58680,
-                             113.96645,
+                 MissionItem(pos[2][0],
+                             pos[2][1],
                              25,
                              10,
                              True,
@@ -163,8 +163,8 @@ scout_mission = [MissionItem(22.58927,
                              float('nan'))]
 
 # 设置打击任务1
-bomb1 = [MissionItem(22.58927,
-                     113.96436,
+bomb1 = [MissionItem(pos[0][0],
+                     pos[0][1],
                      25,
                      10,
                      True,
@@ -178,8 +178,8 @@ bomb1 = [MissionItem(22.58927,
                      float('nan'))]
 
 # 设置打击任务2
-bomb2 = [MissionItem(22.58739,
-                     113.96771,
+bomb2 = [MissionItem(pos[1][0],
+                     pos[1][1],
                      25,
                      10,
                      True,
@@ -193,8 +193,8 @@ bomb2 = [MissionItem(22.58739,
                      float('nan'))]
 
 # 设置打击任务3
-bomb3 = [MissionItem(22.58680,
-                     113.96645,
+bomb3 = [MissionItem(pos[2][0],
+                     pos[2][1],
                      25,
                      10,
                      True,
@@ -227,11 +227,11 @@ async def setup():  # 初始化drone, 连接和检查
             print(f"Drone discovered!")
             break
 
-    # print("Waiting for drone to have a global position estimate...")
-    # async for health in drone.telemetry.health():
-    #     if health.is_global_position_ok:
-    #         print("Global position estimate ok")
-    #         break
+    print("Waiting for drone to have a global position estimate...")
+    async for health in drone.telemetry.health():
+        if health.is_global_position_ok:
+            print("Global position estimate ok")
+            break
 
 
 async def main():  # main函数, 进行监听和任务分配
@@ -308,7 +308,8 @@ async def main():  # main函数, 进行监听和任务分配
             if not await drone.mission.is_mission_finished():
                 await drone.mission.pause_mission()
                 await drone.mission.clear_mission()
-            await runMission(bomb1, True)
+            # await runMission(bomb1, True)
+            await goto(pos[0])
             print("--bomb1 end--")
 
         elif target2Command and (await print_in_air(drone) == True):  # 按 2 前往打击点2
@@ -317,7 +318,8 @@ async def main():  # main函数, 进行监听和任务分配
             if not await drone.mission.is_mission_finished():
                 await drone.mission.pause_mission()
                 await drone.mission.clear_mission()
-            await runMission(bomb2, True)
+            # await runMission(bomb2, True)
+            await goto(pos[1])
             print("--bomb2 end--")
 
         elif target3Command and (await print_in_air(drone) == True):  # 按 3 前往打击点3
@@ -326,7 +328,8 @@ async def main():  # main函数, 进行监听和任务分配
             if not await drone.mission.is_mission_finished():
                 await drone.mission.pause_mission()
                 await drone.mission.clear_mission()
-            await runMission(bomb3, True)
+            # await runMission(bomb3, True)
+            await goto(pos[2])
             print("--bomb3 end--")
 
         elif bombCommand:  # 投弹动作
@@ -523,6 +526,16 @@ async def set_actuator_f1(drone):
     print("set_actuator_f1 begin")
     await drone.action.set_actuator(1, -0.9)
     print("set_actuator_f1 end")
+
+
+# 被抛弃的goto_location函数. 又被捡回来了
+async def goto(target):  # it's useful!
+    global drone
+    if not await drone.mission.is_mission_finished():
+        await drone.mission.pause_mission()
+    print("Going to", end=" ")
+    print(target)
+    await drone.action.goto_location(target[0], target[1], 50, 0)
 
 
 if __name__ == "__main__":
