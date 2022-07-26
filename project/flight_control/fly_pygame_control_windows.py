@@ -5,6 +5,8 @@ import asyncio
 import pygame
 import pygame_button
 import numpy as np
+import pyperclip
+import threading
 
 from mavsdk import System
 from mavsdk.mission import *
@@ -50,7 +52,7 @@ btn_target3 = pygame_button.button(display, (0, 255, 0), "Target 3", (275, 225, 
 btn_refresh = pygame_button.button(display, (0, 255, 0), "Refresh Info", (25, 325, 350, 50), lambda: refreshControl(),
                                    border_radius=5, font_family="Arial", font_size=18)
 
-btn_bomb = pygame_button.button(display, (0, 255, 0), "BOMB", (525, 25, 150, 50), lambda: bombControl(),
+btn_bomb = pygame_button.button(display, (0, 255, 0), "BOMB MOD", (525, 25, 150, 50), lambda: bombControl(),
                                    border_radius=5, font_family="Arial", font_size=18)
 
 btn_arm = pygame_button.button(display, (0, 255, 0), "Arm", (725, 25, 150, 50), lambda: armControl(),
@@ -111,8 +113,14 @@ def refreshControl():
 
 def bombControl():
     global bombCommand
-    if not bombCommand:
-        bombCommand = True
+    while True:
+        data = pyperclip.paste()
+        # print(data)
+        if(data == 'bomb'):
+            bombCommand = True
+            break
+    # if not bombCommand:
+    #     bombCommand = True
 
 def armControl():
     global armCommand
@@ -332,7 +340,7 @@ async def main():  # main函数, 进行监听和任务分配
             await goto(pos[2])
             print("--bomb3 end--")
 
-        elif bombCommand:  # 投弹动作
+        elif bombCommand:  # 进入投弹模式，待视觉系统识别目标到特定位置后触发投弹
             print("--Drop the bomb!--")
             bombCommand = False
             await set_actuator_1(drone)
