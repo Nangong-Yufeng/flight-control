@@ -29,10 +29,11 @@ imgsz = 640
 
 show_default_results = True#是否观看默认结果
 
-src = '1'  # 从摄像头读取视频输入
+src = '0'  # 从摄像头读取视频输入
 
 pos_x = 320
 pos_y = 240
+
 
 #置信度 阈值
 conf_thres=0.3
@@ -122,7 +123,7 @@ def startdetect():
                         if (distx**2 + disty**2) <= 625:  # 如果目标在以中心为圆心，25像素为半径的圆
                             # count = i
                             flag = True
-                            print("Bomb")
+                            print("Bomb", end=': ')
                             print(cls_object[i],img_object[i][0], img_object[i][1], img_object[i][2], img_object[i][3])
                             bombthread.start()
                             bombthread.join()
@@ -148,6 +149,7 @@ def startdetect():
                 im0 = annotator.result()
                 fps = 1/(t1-t0)
                 cv2.putText(im0,':{0}'.format(float('%.1f'%fps)),(0,50),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                cv2.circle(im0, (pos_x, pos_y), 25, (255, 0, 0), 2)
 
             if show_default_results:
                 cv2.imshow('RANX_AI', im0)
