@@ -2,19 +2,17 @@
 
 import asyncio
 
-import mavsdk.info
 import pygame
 import pygame_button
 import numpy as np
 
 from mavsdk import System
 from mavsdk.mission import *
-from mavsdk.offboard import (ActuatorControl, ActuatorControlGroup, OffboardError, Attitude, )
 
 drone = System(mavsdk_server_address='localhost', port=50051)  # 用于windows,mavsdk手动启动,手动填入server地址和端口
 # drone = System()  # 用于除windows外的系统,mavsdk_server可自动启动
 pos = [[22.58927, 113.96436], [22.58739, 113.96771],
-       [22.58680, 113.96645]]  # 设置标靶坐标, 这个是为了goto使用的, 但goto已经被抛弃, 所以它也可以删掉
+       [22.58680, 113.96645]]  # 设置标靶坐标, 这个是为了goto和mission使用的
 pos = np.array(pos)
 
 takeoffCommand = False
