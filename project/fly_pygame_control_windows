@@ -13,7 +13,9 @@ from mavsdk.offboard import (ActuatorControl, ActuatorControlGroup, OffboardErro
 
 drone = System(mavsdk_server_address='localhost', port=50051)  # 用于windows,mavsdk手动启动,手动填入server地址和端口
 # drone = System()  # 用于除windows外的系统,mavsdk_server可自动启动
-pos = [[22.58927, 113.96436], [22.58739, 113.96771],
+
+pos = [[22.58927, 113.96436],
+       [22.58739, 113.96771],
        [22.58680, 113.96645]]  # 设置标靶坐标, 这个是为了goto使用的, 但goto已经被抛弃, 所以它也可以删掉
 pos = np.array(pos)
 
@@ -53,10 +55,10 @@ btn_refresh = pygame_button.button(display, (0, 255, 0), "Refresh Info", (25, 32
                                    border_radius=5, font_family="Arial", font_size=18)
 
 btn_bomb = pygame_button.button(display, (0, 255, 0), "BOMB", (525, 25, 150, 50), lambda: bombControl(),
-                                   border_radius=5, font_family="Arial", font_size=18)
+                                border_radius=5, font_family="Arial", font_size=18)
 
 btn_arm = pygame_button.button(display, (0, 255, 0), "Arm", (725, 25, 150, 50), lambda: armControl(),
-                                   border_radius=5, font_family="Arial", font_size=18)
+                               border_radius=5, font_family="Arial", font_size=18)
 
 flightmode = "NULL"
 battery = 0.0
@@ -116,10 +118,12 @@ def bombControl():
     if not bombCommand:
         bombCommand = True
 
+
 def armControl():
     global armCommand
     if not armCommand:
         armCommand = True
+
 
 # 设置侦察任务
 scout_mission = [MissionItem(22.58927,
@@ -251,7 +255,6 @@ async def main():  # main函数, 进行监听和任务分配
         btn_refresh.show()
         btn_bomb.show()
         btn_arm.show()
-        
 
         font = pygame.font.SysFont("Arial", 20, italic=False)
 
@@ -359,9 +362,9 @@ async def main():  # main函数, 进行监听和任务分配
         #     await drone.action.arm()
 
         # else:
-            # asyncio.ensure_future(info(drone))
-            # await asyncio.sleep(0.05)
-            # await info(drone)
+        # asyncio.ensure_future(info(drone))
+        # await asyncio.sleep(0.05)
+        # await info(drone)
 
 
 async def print_flightmode(drone):
