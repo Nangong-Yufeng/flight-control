@@ -236,7 +236,7 @@ async def setup():  # 初始化drone, 连接和检查
 
 async def main():  # main函数, 进行监听和任务分配
     global drone, takeoffCommand, landCommand, missionCommand, target1Command, target2Command, target3Command, refreshCommand, bombCommand, armCommand
-    global flightmode, battery, in_air, gps_info, latitude_deg, longitude_deg, absolute_altitude_m, relative_altitude_m
+    global flightmode, battery, in_air, gps_info, latitude_deg, longitude_deg, absolute_altitude_m, relative_altitude_m, yaw_deg
 
     while True:
         display.fill((255, 255, 255))
@@ -261,6 +261,8 @@ async def main():  # main函数, 进行监听和任务分配
         display.blit(batterytext, (460, 400))
         in_airtext = font.render(f"In Air:  {in_air}", True, (0, 0, 0))
         display.blit(in_airtext, (460, 350))
+        yaw_degtext = font.render(f"Yaw Deg:  {yaw_deg}", True, (0, 0, 0))
+        display.blit(yaw_degtext, (460, 300))
         gps_infotext = font.render(f"GPS Info:  {gps_info}", True, (0, 0, 0))
         display.blit(gps_infotext, (10, 450))
         latitude_degtext = font.render(f"latitude_deg:  {latitude_deg}", True, (0, 0, 0))
