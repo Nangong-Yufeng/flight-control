@@ -6,4 +6,5 @@
   - e.g. 在终端中打开`flight_control\mavsdk-windows-x64-release\bin` 目录
   - 在终端中执行```./mavsdk_server_bin -p 50051 serial://COM6:57600``` 
 ## vision中包含视觉识别项目
-- [detect_v1.py](vision/detect_v1.py)实现了投弹接口与连接。检测到目标在以中心点为圆心，25像素为半径的圆内时，进行投弹。
+- [detect_v1.py](vision/detect_v1.py)实现了投弹接口与连接。检测到目标在以中心点为圆心，25像素为半径的圆内时，进行投弹。  
+## demo中包含部分部件的demo  
