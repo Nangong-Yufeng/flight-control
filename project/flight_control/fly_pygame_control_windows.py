@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio
+from this import d
 
 import pygame
 import pygame_button
@@ -15,6 +16,9 @@ drone = System(mavsdk_server_address='localhost', port=50051)  # 用于windows,m
 # drone = System()  # 用于除windows外的系统,mavsdk_server可自动启动
 pos = [[22.58927, 113.96436], [22.58739, 113.96771],
        [22.58680, 113.96645]]  # 设置标靶坐标, 这个是为了goto和mission使用的
+bomb_altitude = 15  # 设置投弹时的 **绝对** 高度
+bomb_yaw = 0  # 设置投弹时的偏航角度
+bomb_speed = 10  # 设置投弹时的速度
 pos = np.array(pos)
 
 takeoffCommand = False
@@ -243,6 +247,7 @@ async def setup():  # 初始化drone, 连接和检查
 async def main():  # main函数, 进行监听和任务分配
     global drone, takeoffCommand, landCommand, missionCommand, target1Command, target2Command, target3Command, refreshCommand, bombCommand, armCommand
     global flightmode, battery, in_air, gps_info, latitude_deg, longitude_deg, absolute_altitude_m, relative_altitude_m, yaw_deg
+    global bomb_altitude, bomb_yaw, bomb_speed
 
     while True:
         display.fill((255, 255, 255))
@@ -317,7 +322,7 @@ async def main():  # main函数, 进行监听和任务分配
                 await drone.mission.pause_mission()
                 await drone.mission.clear_mission()
             # await runMission(bomb1, True)
-            await goto(pos[0])
+            await goto(pos[0], bomb_altitude, bomb_yaw, bomb_speed)
             print("--bomb1 end--")
 
         elif target2Command and (await print_in_air(drone) == True):  # 按 2 前往打击点2
@@ -327,7 +332,7 @@ async def main():  # main函数, 进行监听和任务分配
                 await drone.mission.pause_mission()
                 await drone.mission.clear_mission()
             # await runMission(bomb2, True)
-            await goto(pos[1])
+            await goto(pos[1], bomb_altitude, bomb_yaw, bomb_speed)
             print("--bomb2 end--")
 
         elif target3Command and (await print_in_air(drone) == True):  # 按 3 前往打击点3
@@ -337,7 +342,7 @@ async def main():  # main函数, 进行监听和任务分配
                 await drone.mission.pause_mission()
                 await drone.mission.clear_mission()
             # await runMission(bomb3, True)
-            await goto(pos[2])
+            await goto(pos[2], bomb_altitude, bomb_yaw, bomb_speed)
             print("--bomb3 end--")
 
         elif bombCommand:  # 进入投弹模式，待视觉系统识别目标到特定位置后触发投弹
@@ -537,13 +542,14 @@ async def set_actuator_f1(drone):
 
 
 # 被抛弃的goto_location函数. 又被捡回来了
-async def goto(target):  # it's useful!
+async def goto(target, altitude, yaw, speed):  # it's useful!
     global drone
     if not await drone.mission.is_mission_finished():
         await drone.mission.pause_mission()
     print("Going to", end=" ")
     print(target)
-    await drone.action.goto_location(target[0], target[1], 50, 0)
+    await drone.action.goto_location(target[0], target[1], altitude, yaw)  # 前往投弹坐标, 高度, 偏航角
+    await drone.action.set_current_speed(speed)  # 设置速度
 
 
 if __name__ == "__main__":
