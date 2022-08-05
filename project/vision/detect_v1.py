@@ -24,7 +24,7 @@ device = select_device('')
 # device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 half = True
 # half = device.type != 'cpu'
-weights = 'Flying.pt'
+weights = 'best.pt'
 #模型尺寸
 imgsz = 640
 
@@ -147,19 +147,19 @@ def startdetect():
                 disttotal = []
                 flag = False
                 # count = 0
-                bombthread = threading.Thread(target=bomb_func)
+                bombthread_yolo = threading.Thread(target=bomb_func)
                 if ((len(img_object) > 0) & ('red' in cls_object)):  # 如果检测到目标
-                    # print(cls_object[0],img_object[0][0], img_object[0][1], img_object[0][2], img_object[0][3])
+                    # print(cls_object[0],img_object[0][0], img_object[0][1], img_object[0][2], img_object[0][3])bomb
                     for i in range(len(img_object)):
                         distx = fabs(img_object[i][0]-pos_x)
                         disty = fabs(img_object[i][1]-pos_y)
                         if (distx**2 + disty**2) <= 625:  # 如果目标在以中心为圆心，25像素为半径的圆
                             # count = i
                             flag = True
-                            print("Bomb", end=': ')
+                            print("Bomb YoloV5", end=': ')
                             print(cls_object[i],img_object[i][0], img_object[i][1], img_object[i][2], img_object[i][3])
-                            bombthread.start()
-                            bombthread.join()
+                            bombthread_yolo.start()
+                            bombthread_yolo.join()
                             break
                     # xywh = img_object[count]
                 
@@ -206,6 +206,17 @@ def startdetect():
                 ret, track_window = cv2.CamShift(dst, track_window, term_crit)
                 pts = cv2.boxPoints(ret)
                 pts = np.int0(pts)
+                # print("pts = ", pts)
+                target_x = (pts[0][0]+pts[1][0]+pts[2][0]+pts[3][0]) / 4
+                target_y = (pts[0][1]+pts[1][1]+pts[2][1]+pts[3][1]) / 4
+                distx_cs = fabs(target_x-pos_x)
+                disty_cs = fabs(target_y-pos_y)
+                if (distx_cs**2 + disty_cs**2) <= 625:  # 如果目标在以中心为圆心，25像素为半径的圆
+                    bombthread_cs = threading.Thread(target=bomb_func)
+                    print("Bomb CamShift", end=': ')
+                    print(target_x, target_y)
+                    bombthread_cs.start()
+                    bombthread_cs.join()
                 img2 = cv2.polylines(frame,[pts],True, 255,2)
 
 

@@ -237,11 +237,11 @@ async def setup():  # 初始化drone, 连接和检查
             print(f"Drone discovered!")
             break
 
-    print("Waiting for drone to have a global position estimate...")
-    async for health in drone.telemetry.health():
-        if health.is_global_position_ok:
-            print("Global position estimate ok")
-            break
+    # print("Waiting for drone to have a global position estimate...")
+    # async for health in drone.telemetry.health():
+    #     if health.is_global_position_ok:
+    #         print("Global position estimate ok")
+    #         break
 
 
 async def main():  # main函数, 进行监听和任务分配
@@ -297,7 +297,7 @@ async def main():  # main函数, 进行监听和任务分配
         # While being in air and landing mode the drone is not likely to takeoff again, so
         # a condition check is required here to avoid such a condition.
 
-        if takeoffCommand and (await print_in_air(drone) != True):  # 按 上 起飞
+        if takeoffCommand and (await print_in_air(drone) != True):  # 按 上 起飞bomb
             print("--takeoff begin--")
             takeoffCommand = False
             await takeoff()
@@ -348,8 +348,10 @@ async def main():  # main函数, 进行监听和任务分配
         elif bombCommand:  # 进入投弹模式，待视觉系统识别目标到特定位置后触发投弹
             print("--Drop the bomb!--")
             bombCommand = False
-            await set_actuator_1(drone)
             await set_actuator_f1(drone)
+            await asyncio.sleep(2)
+            await set_actuator_1(drone)
+            
 
         elif armCommand:  # arm
             print("--Arming--")
