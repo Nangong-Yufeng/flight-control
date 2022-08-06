@@ -21,12 +21,15 @@ def trans(point):
     }
 
 
-def write():
-    example = [{"point1": Point(0.1, 0.1, 0.1)},
+def write(fp=None):
+    wpoints = [{"point1": Point(0.1, 0.1, 0.1)},
                {"point2": Point(0.2, 0.2, 0.2)},
                {"point3": Point(0.3, 0.3, 0.3)}]
-    f = open("../points.json", 'w')
-    json.dump(example,
+    if fp is None:
+        f = open("../points.json", 'w')
+    else:
+        f = fp
+    json.dump(wpoints,
               f,
               indent=4,
               separators=(',', ":"),
@@ -34,8 +37,18 @@ def write():
               ensure_ascii=False
               )
 
-def read():
-    # todo:)
+
+def read(fp=None):
+    if fp is None:
+        f = open("../points.json", 'r')
+    else:
+        f = fp
+    rpoints = json.load(f)
+    return rpoints
+
 
 if __name__ == '__main__':
-    ()
+    points = read()
+    print("type of points:" + str(type(points)))
+    print(points[1])
+    print(type(points[1]))
