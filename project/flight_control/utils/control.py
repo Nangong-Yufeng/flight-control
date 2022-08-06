@@ -1,3 +1,4 @@
+"""控制逻辑（吧）"""
 from mavsdk import System
 from mavsdk.mission import MissionItem
 from logOutput import log_info
