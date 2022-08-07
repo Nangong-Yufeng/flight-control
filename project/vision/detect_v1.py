@@ -30,7 +30,7 @@ imgsz = 640
 
 show_default_results = True#是否观看默认结果
 
-src = '0'  # 从摄像头读取视频输入
+src = '1'  # 从摄像头读取视频输入
 
 pos_x = 320
 pos_y = 240

@@ -13,11 +13,11 @@ from mavsdk import System
 from mavsdk.mission import *
 
 drone = System(mavsdk_server_address='localhost', port=50051)  # 用于windows,mavsdk手动启动,手动填入server地址和端口
-# drone = System()  # 用于除windows外的系统,mavsdk_server可自动启动
-pos = [[22.58927, 113.96436], [22.58739, 113.96771],
+# drone = System()  # 用于除windows外的系统,mavsdk_server可自动启动 bomb
+pos = [[22.5907503, 113.9623144], [22.58739, 113.96771],
        [22.58680, 113.96645]]  # 设置标靶坐标, 这个是为了goto和mission使用的
-bomb_altitude = 15  # 设置投弹时的 **绝对** 高度
-bomb_yaw = 0  # 设置投弹时的偏航角度
+bomb_altitude = 30  # 设置投弹时的 **绝对** 高度
+bomb_yaw = 0  # 设置投弹时的偏航角度 bomb
 bomb_speed = 10  # 设置投弹时的速度
 pos = np.array(pos)
 

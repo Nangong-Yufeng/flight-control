@@ -12,7 +12,7 @@ from mavsdk.mission import *
 from mavsdk.offboard import (ActuatorControl, ActuatorControlGroup, OffboardError, Attitude, )
 
 drone = System()
-pos = [[22.58927, 113.96436], [22.58739, 113.96771],
+pos = [[22.5907503, 113.9623144], [22.58739, 113.96771],
        [22.58680, 113.96645]]  # 设置标靶坐标, 这个是为了goto使用的, 但goto已经被抛弃, 所以它也可以删掉
 pos = np.array(pos)
 
