@@ -8,11 +8,13 @@ import pygame_button
 import numpy as np
 import pyperclip
 import threading
+import os
 
 from mavsdk import System
 from mavsdk.mission import *
 
-drone = System(mavsdk_server_address='localhost', port=50051)  # 用于windows,mavsdk手动启动,手动填入server地址和端口
+drone = System()
+# drone = System(mavsdk_server_address='localhost', port=50051)  # 用于windows,mavsdk手动启动,手动填入server地址和端口
 # drone = System()  # 用于除windows外的系统,mavsdk_server可自动启动 bomb
 pos = [[22.5907503, 113.9623144], [22.58739, 113.96771],
        [22.58680, 113.96645]]  # 设置标靶坐标, 这个是为了goto和mission使用的
@@ -218,25 +220,45 @@ bomb3 = [MissionItem(pos[2][0],
                      float('nan'))]
 
 
+def open_server():  # 打开mavsdk_server的函数
+    init_mavsdk_server = r'"project\demo\cmd\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe -p 50051 serial://COM6:57600"'
+    print("###########################connect 0/3")
+    server = os.system(init_mavsdk_server)
+    print("###########################connect 1/3")
+    print (server)
+
 async def setup():  # 初始化drone, 连接和检查
     """
     General configurations, setups, and connections are done here.
     :return:
     """
     global drone
-    print("connect begin")
+    # init_mavsdk_server = r'"project\demo\cmd\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe -p 50051"'
+    # print("###########################connect 0/3")
+    # server = os.system(init_mavsdk_server)
+    # print("###########################connect 1/3")
+    # print (server)
+    open_server_thread = threading.Thread(target=open_server)  # 打开mavsdk_server的线程
+    open_server_thread.start()
+    # open_server_thread.join()  # join会使主线程阻塞
+    print("###########################connect 2/3")
+    drone = System(mavsdk_server_address='localhost', port=50051)
+    print("###########################connect 3/3")
+    print("###########################connect begin###############################")
     # await drone.connect(system_address="serial:///dev/ttyUSB0")  # 用于ubuntu
-    # await drone.connect(system_address="udp://:14540")  # 用于模拟器
-    await drone.connect()  # 用于windows, 因为要手动启动mavsdk_server
+    # await drone.connect(system_address="udp://:14540")  # 用于模拟器、
+    # debug暂时注释掉
+    # await drone.connect()  # 用于windows, 因为要手动启动mavsdk_server
 
     print("connect end")
 
     print("Waiting for drone to connect...")
-    async for state in drone.core.connection_state():
-        if state.is_connected:
-            print(f"Drone discovered!")
-            break
-
+    # debug暂时注释掉
+    # async for state in drone.core.connection_state():
+    #     if state.is_connected:
+    #         print(f"Drone discovered!")
+    #         break
+    # debug暂时注释掉
     # print("Waiting for drone to have a global position estimate...")
     # async for health in drone.telemetry.health():
     #     if health.is_global_position_ok:
