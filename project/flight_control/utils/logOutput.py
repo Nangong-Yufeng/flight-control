@@ -4,6 +4,9 @@
 
 
 def log_error(string):
+    """
+
+    """
     print('\033[1;31m[ERROR]:'+string+'\033[0m')
 
 

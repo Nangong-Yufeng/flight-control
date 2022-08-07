@@ -31,9 +31,9 @@ class button:
     """
     Creates a button element, which is made with pygame.Rect(). This program allows you to click it and make something happen
     when clicked.
-    
+
         Usage: button(surface, (r, g, b), "text", (x, y, width, height), lambda: command, [optional argument(s)])
-        
+
         Optional arguments (instance):
             [Borders]
             (int) border_radius, (int) border_top_left_radius, (int) border_top_right_radius,
@@ -41,7 +41,7 @@ class button:
 
             [Font]
             (pygame Font/SysFont) font, (str) font_family, (int) font_size
-            
+
             [Styling]
             (list) text_color, (list) hover_color, (bool) bold, (bool) italic
     """
