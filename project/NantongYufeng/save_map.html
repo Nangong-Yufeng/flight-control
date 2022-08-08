@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<head>    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_adc2d6f1d6bcd22199e75591072a2f17 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+            </style>
+        
+</head>
+<body>    
+    
+            <div class="folium-map" id="map_adc2d6f1d6bcd22199e75591072a2f17" ></div>
+        
+</body>
+<script>    
+    
+            var map_adc2d6f1d6bcd22199e75591072a2f17 = L.map(
+                "map_adc2d6f1d6bcd22199e75591072a2f17",
+                {
+                    center: [22.5907, 113.9623],
+                    crs: L.CRS.EPSG3857,
+                    zoom: 16,
+                    zoomControl: true,
+                    preferCanvas: false,
+                }
+            );
+            L.control.scale().addTo(map_adc2d6f1d6bcd22199e75591072a2f17);
+
+            
+
+        
+    
+            var tile_layer_15e63a37d5d707188d2077929bb0619a = L.tileLayer(
+                "http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn\u0026size=1\u0026scale=1\u0026style=7\u0026x={x}\u0026y={y}\u0026z={z}",
+                {"attribution": "default", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            ).addTo(map_adc2d6f1d6bcd22199e75591072a2f17);
+        
+    
+            var circle_marker_957cdc594d7d0c93399d7f6e9bab7e35 = L.circleMarker(
+                [22.5907, 113.9623],
+                {"bubblingMouseEvents": true, "color": "#DC143C", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6495E", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 1, "stroke": true, "weight": 3}
+            ).addTo(map_adc2d6f1d6bcd22199e75591072a2f17);
+        
+    
+        var popup_4fc6c7fa9a1513a57eaec96a1547a551 = L.popup({"maxWidth": "100%"});
+
+        
+            var html_92132ac3d0adc37c982bea152c65e94b = $(`<div id="html_92132ac3d0adc37c982bea152c65e94b" style="width: 100.0%; height: 100.0%;">popup</div>`)[0];
+            popup_4fc6c7fa9a1513a57eaec96a1547a551.setContent(html_92132ac3d0adc37c982bea152c65e94b);
+        
+
+        circle_marker_957cdc594d7d0c93399d7f6e9bab7e35.bindPopup(popup_4fc6c7fa9a1513a57eaec96a1547a551)
+        ;
+
+        
+    
+    
+                var lat_lng_popup_d236ca7e069e08f043009cbda676ea86 = L.popup();
+                function latLngPop(e) {
+                    lat_lng_popup_d236ca7e069e08f043009cbda676ea86
+                        .setLatLng(e.latlng)
+                        .setContent("Latitude: " + e.latlng.lat.toFixed(4) +
+                                    "<br>Longitude: " + e.latlng.lng.toFixed(4))
+                        .openOn(map_adc2d6f1d6bcd22199e75591072a2f17);
+                    }
+                map_adc2d6f1d6bcd22199e75591072a2f17.on('click', latLngPop);
+            
+    
+                function newMarker(e){
+                    var new_mark = L.marker().setLatLng(e.latlng).addTo(map_adc2d6f1d6bcd22199e75591072a2f17);
+                    new_mark.dragging.enable();
+                    new_mark.on('dblclick', function(e){ map_adc2d6f1d6bcd22199e75591072a2f17.removeLayer(e.target)})
+                    var lat = e.latlng.lat.toFixed(4),
+                       lng = e.latlng.lng.toFixed(4);
+                    new_mark.bindPopup("Waypoint");
+                    };
+                map_adc2d6f1d6bcd22199e75591072a2f17.on('click', newMarker);
+            
+</script>

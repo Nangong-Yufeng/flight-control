@@ -8,6 +8,7 @@ import folium
 # 调用高德地图http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}
 Map = folium.Map(location=[22.5907, 113.9623],
                  zoom_start=16,
+                 crs="EPSG3857", 
                  control_scale=True,
                  tiles='http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}',
                  attr='default')
@@ -31,11 +32,11 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(QMainWindow, self).__init__()
         self.setWindowTitle('地图显示')
-        self.resize(1000, 640)
+        self.resize(1920, 1080)
         # 新建一个QWebEngineView()对象
         self.qwebengine = QWebEngineView(self)
         # 设置网页在窗口中显示的位置和大小
-        self.qwebengine.setGeometry(20, 20, 960, 600)
+        self.qwebengine.setGeometry(0, 0, 960, 540)
         # 在QWebEngineView中加载网址
         path = "file:\\" + os.getcwd() + "\\save_map.html"
         path = path.replace('\\', '/')
