@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import asyncio
-from this import d
 
 import pygame
 import pygame_button
