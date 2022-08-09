@@ -1,6 +1,6 @@
 # 对地任务的实现  
 ## [认真做的地面站v1.0(NantongYufeng)](NantongYufeng)  
-- 目前进度 ![进度](process.png)  
+- 目前进度 ![进度00](process00.png)  ![进度01](process01.png)  
 - 它将实现:  
   - 一键启动, 各功能集合为一体  
   - 左上实现地图功能  
