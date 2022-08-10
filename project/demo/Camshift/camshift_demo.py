@@ -39,7 +39,9 @@ while(True):
         # 去除低亮度的像素点的影响
         # eg. mask = cv2.inRange(hsv, lower_red, upper_red)
         mask = cv2.inRange(hsv, np.array((0., 30.,10.)), np.array((180.,256.,255.)))
+        print('trackObject = ', trackObject)
         if trackObject == -1:
+            
             track_window=(xs,ys,ws,hs)  # 设置跟踪框参数
             maskroi = mask[ys:ys+hs, xs:xs+ws]
             hsv_roi = hsv[ys:ys+hs, xs:xs+ws]
@@ -75,6 +77,7 @@ while(True):
             # mask  - 可选的操作掩码。
             cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)
             trackObject = 1
+        print('roi_hist = ', roi_hist)
         dst = cv2.calcBackProject([hsv], [0], roi_hist, [0, 180], 1)
         dst &= mask
         ret, track_window = cv2.CamShift(dst, track_window, term_crit)
