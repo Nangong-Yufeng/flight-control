@@ -98,6 +98,8 @@ Map.add_child(folium.LatLngPopup())                     # 显示鼠标点击点�
 Map.add_child(folium.ClickForMarker(popup='Waypoint'))  # 将鼠标点击点添加到地图上
 Map.save("sources/save_map.html")
 
+_translate = QtCore.QCoreApplication.translate
+
 # 设置侦察任务
 scout_mission = [MissionItem(tar_pos[0][0],
                              tar_pos[0][1],
@@ -140,9 +142,10 @@ scout_mission = [MissionItem(tar_pos[0][0],
                              float('nan'))]
 
 class Ui_MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, loop):
         super(QMainWindow, self).__init__()
         self.timer_video = QtCore.QTimer()
+        self.loop = loop
         self.setupUi(self)
         self.init_cam()
         self.init_slots()
@@ -279,6 +282,9 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_16 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_16.setGeometry(QtCore.QRect(670, 560, 260, 30))
         self.pushButton_16.setObjectName("pushButton_16")
+        self.pushButton_17 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_17.setGeometry(QtCore.QRect(30, 910, 260, 30))
+        self.pushButton_17.setObjectName("pushButton_17")
 
         self.label_1 = QtWidgets.QLabel(self.centralwidget)
         self.label_1.setGeometry(QtCore.QRect(990, 560, 260, 30))
@@ -338,7 +344,7 @@ class Ui_MainWindow(QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
+        
         MainWindow.setWindowTitle(_translate("MainWindow", "NantongYufeng"))
         path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
         path = path.replace('\\', '/')
@@ -359,9 +365,10 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_14.setText(_translate("MainWindow", "自动投弹暂时有问题"))
         self.pushButton_15.setText(_translate("MainWindow", "立即投弹(手动)"))
         self.pushButton_16.setText(_translate("MainWindow", "启动目标追踪"))
+        self.pushButton_17.setText(_translate("MainWindow", "开启数据追踪"))
         self.pushButton_16.setDisabled(True)
 
-        self.label_1.setText(_translate("MainWindow", "高度:"+hight))
+        self.label_1.setText(_translate("MainWindow", "高度:"+'下面写着呢'))
         self.label_2.setText(_translate("MainWindow", "速度:"+speed))
         self.label_3.setText(_translate("MainWindow", "电池:"+battery))
         self.label_4.setText(_translate("MainWindow", "滚转角:"+roll_deg))
@@ -395,6 +402,69 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_13.clicked.connect(self.kill)
         self.pushButton_14.clicked.connect(self.bomb_mode)
         self.pushButton_15.clicked.connect(self.drop_bomb)
+        self.pushButton_17.clicked.connect(self.start_refresh)
+
+# 数据更新模块
+# 数据更新模块
+# 数据更新模块
+
+    async def refresh_position(self):
+        global lat_deg, lon_deg, abs_alt, rel_alt
+        async for position in drone.telemetry.position():
+            # print(position)
+            lat_deg = round(position.latitude_deg, 7)
+            lon_deg = round(position.longitude_deg, 7)
+            abs_alt = round(position.absolute_altitude_m, 2)
+            rel_alt = round(position.relative_altitude_m, 2)
+            self.label_8.setText(_translate("MainWindow", "纬度:"+str(lat_deg)))
+            self.label_9.setText(_translate("MainWindow", "经度:"+str(lon_deg)))
+            self.label_11.setText(_translate("MainWindow", "绝对高度:"+str(abs_alt)))
+            self.label_12.setText(_translate("MainWindow", "相对高度:"+str(rel_alt)))
+
+    async def refresh_airspd(self):
+        global speed
+        async for fixedwingmetrics in drone.telemetry.fixedwing_metrics():
+            # print(fixedwingmetrics)
+            speed = round(fixedwingmetrics.airspeed_m_s, 2)
+            self.label_2.setText(_translate("MainWindow", "速度:"+str(speed)))
+
+    async def refresh_battery(self):
+        global battery
+        async for drone_battery in drone.telemetry.battery():
+            battery = round(drone_battery.remaining_percent, 2)
+            self.label_3.setText(_translate("MainWindow", "电池"+str(battery)))
+
+    async def refresh_angularvelocity(self):
+        global roll_speed, pitch_speed, yaw_speed
+        async for AngularVelocity in drone.telemetry.attitude_angular_velocity_body():
+            roll_speed = round(AngularVelocity.roll_rad_s, 2)
+            pitch_speed = round(AngularVelocity.pitch_rad_s, 2)
+            yaw_speed = round(AngularVelocity.yaw_rad_s, 2)
+            self.label_13.setText(_translate("MainWindow", "滚转角速度:"+str(roll_speed)))
+            self.label_14.setText(_translate("MainWindow", "俯仰角速度:"+str(pitch_speed)))
+            self.label_15.setText(_translate("MainWindow", "偏航角速度:"+str(yaw_speed)))
+
+    async def refresh_eulerangle(self):
+        global roll_deg, pitch_deg, yaw_deg
+        async for eularangle in drone.telemetry.attitude_euler():
+            roll_deg = round(eularangle.roll_deg, 2)
+            pitch_deg = round(eularangle.pitch_deg, 2)
+            yaw_deg = round(eularangle.yaw_deg, 2)
+            self.label_4.setText(_translate("MainWindow", "滚转角:"+str(roll_deg)))
+            self.label_5.setText(_translate("MainWindow", "俯仰角:"+str(pitch_deg)))
+            self.label_6.setText(_translate("MainWindow", "偏航角:"+str(yaw_deg)))
+
+    async def refresh_flightmode(self):
+        global flight_mode
+        async for FM in drone.telemetry.flight_mode():
+            flight_mode = FM
+            self.label_7.setText(_translate("MainWindow", "飞行模式:"+str(flight_mode)))
+
+    async def refresh_num_satellites(self):
+        global num_sate
+        async for gpsinfo in drone.telemetry.gps_info():
+            num_sate = gpsinfo.num_satellites
+            self.label_10.setText(_translate("MainWindow", "搜星数:"+str(num_sate)))
 
     def set_tar_pos(self, i):
         global tar_pos
@@ -402,10 +472,7 @@ class Ui_MainWindow(QMainWindow):
         set_tar_pos_thread.start()
 
     def set_tar_pos_thread(self, i, tar_pos):
-        loop = asyncio.new_event_loop()
-        tasks = [self.set_tar_pos_drone(i, tar_pos)]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close
+        self.loop.run_until_complete(self.set_tar_pos_drone(i, tar_pos))
 
     async def set_tar_pos_drone(self, i, tar_pos):
         global drone
@@ -426,30 +493,31 @@ class Ui_MainWindow(QMainWindow):
 
     def connect_plane_thread(self):
         global drone
-        loop = asyncio.new_event_loop()
-        tasks = [self.drone_connect(drone)]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close
+        self.loop.run_until_complete(self.drone_connect(drone))
 
     async def drone_connect(self, drone):
         # print('before connect')
         await drone.connect()
-        # print('after connect')
+        print('connect success')
+
+    def start_refresh(self):
+        threading.Thread(target=self.start_refresh_thread).start()
+
+    def start_refresh_thread(self):
+        tasks = [self.refresh_airspd(), self.refresh_position(), self.refresh_angularvelocity(), self.refresh_battery(), self.refresh_eulerangle(), self.refresh_flightmode(), self.refresh_num_satellites()]
+        self.loop.run_until_complete(asyncio.wait(tasks))
 
     def scout_mission(self):
         scout_mission_thread = threading.Thread(target=self.scout_mission_thread)
         scout_mission_thread.start()
 
     def scout_mission_thread(self):
-        loop = asyncio.new_event_loop()
-        tasks = [self.scout_mission_drone(scout_mission, False)]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close
+        self.loop.run_until_complete(self.scout_mission_drone(scout_mission, False))
 
     async def scout_mission_drone(self, mission_items, is_back):
         global drone
         termination_task = asyncio.ensure_future(
-            self.observe_is_in_air(drone))
+            self.observe_is_in_air(drone))  # 需测试一下能不能加这句话
 
         mission_plan = MissionPlan(mission_items)
 
@@ -489,15 +557,12 @@ class Ui_MainWindow(QMainWindow):
         goto_thread.start()
 
     def goto_thread(self, i):
-        loop = asyncio.new_event_loop()
-        tasks = [self.goto_drone(tar_pos[i], bomb_altitude, bomb_yaw, bomb_speed)]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close
+        self.loop.run_until_complete(self.goto_drone(tar_pos[i], bomb_altitude, bomb_yaw, bomb_speed))
 
     async def goto_drone(self, target, altitude, yaw, speed):
         global drone
-        if not await drone.mission.is_mission_finished():
-            await drone.mission.pause_mission()
+        if not await drone.mission.is_mission_finished():  # 需测试能不能加这句
+            await drone.mission.pause_mission()  # 需测试能不能加这句
         print("Going to", end=" ")
         print(target)
         await drone.action.goto_location(target[0], target[1], altitude, yaw)  # 前往投弹坐标, 高度, 偏航角
@@ -508,10 +573,7 @@ class Ui_MainWindow(QMainWindow):
         arm_thread.start()
 
     def arm_thread(self):
-        loop = asyncio.new_event_loop()
-        tasks = [self.arm_drone()]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close
+        self.loop.run_until_complete(self.arm_drone())
 
     async def arm_drone(self):
         global drone
@@ -522,10 +584,7 @@ class Ui_MainWindow(QMainWindow):
         disarm_thread.start()
 
     def disarm_thread(self):
-        loop = asyncio.new_event_loop()
-        tasks = [self.disarm_drone()]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close
+        self.loop.run_until_complete(self.disarm_drone())
 
     async def disarm_drone(self):
         global drone
@@ -536,10 +595,7 @@ class Ui_MainWindow(QMainWindow):
         reboot_thread.start()
 
     def reboot_thread(self):
-        loop = asyncio.new_event_loop()
-        tasks = [self.reboot_drone()]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close
+        self.loop.run_until_complete(self.reboot_drone())
 
     async def reboot_drone(self):
         global drone
@@ -550,10 +606,7 @@ class Ui_MainWindow(QMainWindow):
         kill_thread.start()
 
     def kill_thread(self):
-        loop = asyncio.new_event_loop()
-        tasks = [self.kill_drone()]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close
+        self.loop.run_until_complete(self.kill_drone())
 
     async def kill_drone(self):
         global drone
@@ -564,10 +617,7 @@ class Ui_MainWindow(QMainWindow):
         bomb_mode_thread.start()
 
     def bomb_mode_thread(self):
-        loop = asyncio.new_event_loop()
-        tasks = [self.bomb_mode_drone()]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close
+        self.loop.run_until_complete(self.bomb_mode_drone())
 
     async def bomb_mode_drone(self):
         global drone
@@ -581,10 +631,8 @@ class Ui_MainWindow(QMainWindow):
         drop_bomb_thread.start()
 
     def drop_bomb_thread(self):
-        loop = asyncio.new_event_loop()
-        tasks = [self.drop_bomb_drone()]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close
+        self.loop.run_until_complete(self.drop_bomb_drone())
+        # loop.close
 
     async def drop_bomb_drone(self):
         global drone
@@ -762,8 +810,9 @@ class Ui_MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
     app = QApplication(sys.argv)
-    my_MainWindow = Ui_MainWindow()
+    my_MainWindow = Ui_MainWindow(loop)
     # my_MainWindow.setupUi(my_MainWindow)
     my_MainWindow.show()
     sys.exit(app.exec_())
