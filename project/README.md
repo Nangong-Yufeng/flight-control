@@ -9,6 +9,7 @@
   - 实现前端与后端分离  
   - 飞行数据实时刷新  
   - You tell me.  
+- demo文件夹中包含用于ubuntu的debug版本
 ## ~~[瞎做的地面站v0.1(flight_control)](flight_control)~~  
 - ~~[fly.py](flight_control/fly.py)使用按键监听并且没有图形化界面~~  
 - ~~[fly_pygame_control.py](flight_control/fly_pygame_control.py)使用图形化界面控制飞机~~
