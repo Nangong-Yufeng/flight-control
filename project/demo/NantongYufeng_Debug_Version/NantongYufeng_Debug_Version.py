@@ -101,7 +101,7 @@ Map.add_child(folium.ClickForMarker(popup='Waypoint'))  # 将鼠标点击点添�
 Map.save("save_map.html")
 
 _translate = QtCore.QCoreApplication.translate
-loop00 = asyncio.get_event_loop()
+
 # 设置侦察任务
 scout_mission = [MissionItem(tar_pos[0][0],
                              tar_pos[0][1],

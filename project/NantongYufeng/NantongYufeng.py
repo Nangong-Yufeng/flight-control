@@ -38,6 +38,10 @@ from utils.plots import plot_one_box
 from mavsdk import System
 from mavsdk.mission import *
 
+import nest_asyncio
+nest_asyncio.apply()
+# __import__('IPython').embed()
+
 
 hight = 'null'  # 高度
 speed = 'null'  # 速度
@@ -54,7 +58,7 @@ rel_alt = 'null'  # 相对高度
 roll_speed = 'null'  # 滚转角速度
 pitch_speed = 'null'  # 俯仰角速度
 yaw_speed = 'null'  # 偏航角速度
-init_mavsdk_server = r'"sources\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe"' # 你要运行的exe文件
+init_mavsdk_server = r'"sources\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe -p 50051 serial://COM3:57600"' # 你要运行的exe文件
 
 bomb_flag = False
 
@@ -602,8 +606,10 @@ class Ui_MainWindow(QMainWindow):
         await drone.action.reboot()
 
     def kill(self):
-        kill_thread = threading.Thread(target=self.kill_thread)
-        kill_thread.start()
+        reply = QMessageBox.question(self, 'kill?', '您想要自杀吗?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if(reply == QMessageBox.Yes):
+            kill_thread = threading.Thread(target=self.kill_thread)
+            kill_thread.start()
 
     def kill_thread(self):
         self.loop.run_until_complete(self.kill_drone())
