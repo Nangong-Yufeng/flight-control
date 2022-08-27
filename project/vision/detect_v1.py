@@ -30,7 +30,7 @@ imgsz = 640
 
 show_default_results = True#是否观看默认结果
 
-src = '1'  # 从摄像头读取视频输入
+src = '0'  # 从摄像头读取视频输入
 
 pos_x = 320
 pos_y = 240
@@ -53,6 +53,10 @@ w = str(weights[0] if isinstance(weights, list) else weights)
 classify, suffix, suffixes = False, Path(w).suffix.lower(), ['.pt', '.onnx', '.tflite', '.pb', '']
 check_suffix(w, suffixes)
 pt, onnx, tflite, pb, saved_model = (suffix == x for x in suffixes)
+if 'torchscript' in w:
+    print('YES')
+else:
+    print('NO')
 model = torch.jit.load(w) if 'torchscript' in w else attempt_load(weights, map_location=device)
 stride = int(model.stride.max()) 
 names = model.module.names if hasattr(model, 'module') else model.names  # get class names

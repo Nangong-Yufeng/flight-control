@@ -23,7 +23,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_73af7d567e066a1ab872d3d0a241e2c9 {
+                #map_c71b992db39305fa48d2d1847a45e7cd {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -35,13 +35,13 @@
 </head>
 <body>    
     
-            <div class="folium-map" id="map_73af7d567e066a1ab872d3d0a241e2c9" ></div>
+            <div class="folium-map" id="map_c71b992db39305fa48d2d1847a45e7cd" ></div>
         
 </body>
 <script>    
     
-            var map_73af7d567e066a1ab872d3d0a241e2c9 = L.map(
-                "map_73af7d567e066a1ab872d3d0a241e2c9",
+            var map_c71b992db39305fa48d2d1847a45e7cd = L.map(
+                "map_c71b992db39305fa48d2d1847a45e7cd",
                 {
                     center: [22.5907, 113.9623],
                     crs: L.CRS.EPSG3857,
@@ -50,56 +50,56 @@
                     preferCanvas: false,
                 }
             );
-            L.control.scale().addTo(map_73af7d567e066a1ab872d3d0a241e2c9);
+            L.control.scale().addTo(map_c71b992db39305fa48d2d1847a45e7cd);
 
             
 
         
     
-            var tile_layer_52d5768955b9e850a5f7be1ac15a3e7e = L.tileLayer(
+            var tile_layer_d75826ad39ab4eded8d961c45cfd249c = L.tileLayer(
                 "http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn\u0026size=1\u0026scale=1\u0026style=7\u0026x={x}\u0026y={y}\u0026z={z}",
                 {"attribution": "default", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
-            ).addTo(map_73af7d567e066a1ab872d3d0a241e2c9);
+            ).addTo(map_c71b992db39305fa48d2d1847a45e7cd);
         
     
-            var circle_marker_72d8fc897340c56e2a53b5e19d6f3fb5 = L.circleMarker(
+            var circle_marker_c1c323b6b0c2a12c79bfee3a3a53356d = L.circleMarker(
                 [22.5907, 113.9623],
                 {"bubblingMouseEvents": true, "color": "#DC143C", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6495E", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 1, "stroke": true, "weight": 3}
-            ).addTo(map_73af7d567e066a1ab872d3d0a241e2c9);
+            ).addTo(map_c71b992db39305fa48d2d1847a45e7cd);
         
     
-        var popup_400395ef558891ff2e757d632d55e153 = L.popup({"maxWidth": "100%"});
+        var popup_4c5536acc930509fd1ff6f8ab65d85ad = L.popup({"maxWidth": "100%"});
 
         
-            var html_1652d76dcb26312359c4d29ee3f125e6 = $(`<div id="html_1652d76dcb26312359c4d29ee3f125e6" style="width: 100.0%; height: 100.0%;">popup</div>`)[0];
-            popup_400395ef558891ff2e757d632d55e153.setContent(html_1652d76dcb26312359c4d29ee3f125e6);
+            var html_a9108ddca0e3164284461833ffe54dcf = $(`<div id="html_a9108ddca0e3164284461833ffe54dcf" style="width: 100.0%; height: 100.0%;">popup</div>`)[0];
+            popup_4c5536acc930509fd1ff6f8ab65d85ad.setContent(html_a9108ddca0e3164284461833ffe54dcf);
         
 
-        circle_marker_72d8fc897340c56e2a53b5e19d6f3fb5.bindPopup(popup_400395ef558891ff2e757d632d55e153)
+        circle_marker_c1c323b6b0c2a12c79bfee3a3a53356d.bindPopup(popup_4c5536acc930509fd1ff6f8ab65d85ad)
         ;
 
         
     
     
-                var lat_lng_popup_e00cf6d72f4fb99c4256e0abb87dc32f = L.popup();
+                var lat_lng_popup_089274d94ca9a25e6410ca8c720beabb = L.popup();
                 function latLngPop(e) {
-                    lat_lng_popup_e00cf6d72f4fb99c4256e0abb87dc32f
+                    lat_lng_popup_089274d94ca9a25e6410ca8c720beabb
                         .setLatLng(e.latlng)
                         .setContent("Latitude: " + e.latlng.lat.toFixed(4) +
                                     "<br>Longitude: " + e.latlng.lng.toFixed(4))
-                        .openOn(map_73af7d567e066a1ab872d3d0a241e2c9);
+                        .openOn(map_c71b992db39305fa48d2d1847a45e7cd);
                     }
-                map_73af7d567e066a1ab872d3d0a241e2c9.on('click', latLngPop);
+                map_c71b992db39305fa48d2d1847a45e7cd.on('click', latLngPop);
             
     
                 function newMarker(e){
-                    var new_mark = L.marker().setLatLng(e.latlng).addTo(map_73af7d567e066a1ab872d3d0a241e2c9);
+                    var new_mark = L.marker().setLatLng(e.latlng).addTo(map_c71b992db39305fa48d2d1847a45e7cd);
                     new_mark.dragging.enable();
-                    new_mark.on('dblclick', function(e){ map_73af7d567e066a1ab872d3d0a241e2c9.removeLayer(e.target)})
+                    new_mark.on('dblclick', function(e){ map_c71b992db39305fa48d2d1847a45e7cd.removeLayer(e.target)})
                     var lat = e.latlng.lat.toFixed(4),
                        lng = e.latlng.lng.toFixed(4);
                     new_mark.bindPopup("Waypoint");
                     };
-                map_73af7d567e066a1ab872d3d0a241e2c9.on('click', newMarker);
+                map_c71b992db39305fa48d2d1847a45e7cd.on('click', newMarker);
             
 </script>

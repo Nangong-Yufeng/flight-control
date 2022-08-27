@@ -34,11 +34,16 @@ from utils.torch_utils import select_device
 from models.experimental import attempt_load
 from utils.general import check_img_size, non_max_suppression, scale_coords, xyxy2xywh
 from utils.datasets import letterbox
-from utils.plots import plot_one_box
+from utils.plots import Annotator
 from mavsdk import System
 from mavsdk.mission import *
-
+from models.experimental import attempt_load
+from utils.datasets import LoadStreams
+from utils.general import check_img_size, check_suffix, non_max_suppression, scale_coords, xyxy2xywh
+from utils.plots import Annotator
+from utils.torch_utils import select_device
 import nest_asyncio
+
 nest_asyncio.apply()
 # __import__('IPython').embed()
 
@@ -65,7 +70,7 @@ bomb_flag = False
 pos_x = 320
 pos_y = 240
 
-tar_pos = [[22.5907503, 113.9623144], [22.58739, 113.96771],
+tar_pos = [[22.5903682, 113.9624542], [22.58739, 113.96771],
        [22.58680, 113.96645]]  # 设置标靶坐标, 这个是为了goto和mission使用的
 bomb_altitude = 30  # 设置投弹时的 **绝对** 高度
 bomb_yaw = 0  # 设置投弹时的偏航角度 bomb
@@ -144,7 +149,50 @@ scout_mission = [MissionItem(tar_pos[0][0],
                              float('nan'),
                              float('nan'),
                              float('nan'))]
+bomb1 = [MissionItem(tar_pos[0][0],
+                     tar_pos[0][1],
+                     25,
+                     10,
+                     True,
+                     float('nan'),
+                     float('nan'),
+                     MissionItem.CameraAction.NONE,
+                     float('nan'),
+                     float('nan'),
+                     float('nan'),
+                     float('nan'),
+                     float('nan'))]
 
+# 设置打击任务2
+bomb2 = [MissionItem(tar_pos[1][0],
+                     tar_pos[1][1],
+                     25,
+                     10,
+                     True,
+                     float('nan'),
+                     float('nan'),
+                     MissionItem.CameraAction.NONE,
+                     float('nan'),
+                     float('nan'),
+                     float('nan'),
+                     float('nan'),
+                     float('nan'))]
+
+# 设置打击任务3
+bomb3 = [MissionItem(tar_pos[2][0],
+                     tar_pos[2][1],
+                     25,
+                     10,
+                     True,
+                     float('nan'),
+                     float('nan'),
+                     MissionItem.CameraAction.NONE,
+                     float('nan'),
+                     float('nan'),
+                     float('nan'),
+                     float('nan'),
+                     float('nan'))]
+bomb_mission = [bomb1, bomb2, bomb3]
 class Ui_MainWindow(QMainWindow):
     def __init__(self, loop):
         super(QMainWindow, self).__init__()
@@ -158,7 +206,7 @@ class Ui_MainWindow(QMainWindow):
 
         parser = argparse.ArgumentParser()
         parser.add_argument('--weights', nargs='+', type=str,
-                            default='weights/yolov5s.pt', help='model.pt path(s)')
+                            default='weights/best.pt', help='model.pt path(s)')
         # file/folder, 0 for webcam
         parser.add_argument('--source', type=str,
                             default='data/images', help='source')
@@ -196,15 +244,14 @@ class Ui_MainWindow(QMainWindow):
         print(self.opt)
 
         source, weights, view_img, save_txt, imgsz = self.opt.source, self.opt.weights, self.opt.view_img, self.opt.save_txt, self.opt.img_size
-
+        # print('weights = ', weights)
         self.device = select_device(self.opt.device)
         self.half = self.device.type != 'cpu'  # half precision only supported on CUDA
 
         cudnn.benchmark = True
 
         # Load model
-        self.model = attempt_load(
-            weights, map_location=self.device)  # load FP32 model
+        self.model = attempt_load(weights, map_location=self.device)  # load FP32 model
         stride = int(self.model.stride.max())  # model stride
         self.imgsz = check_img_size(imgsz, s=stride)  # check img_size
         if self.half:
@@ -516,9 +563,9 @@ class Ui_MainWindow(QMainWindow):
         scout_mission_thread.start()
 
     def scout_mission_thread(self):
-        self.loop.run_until_complete(self.scout_mission_drone(scout_mission, False))
+        self.loop.run_until_complete(self.mission_drone(scout_mission, False))
 
-    async def scout_mission_drone(self, mission_items, is_back):
+    async def mission_drone(self, mission_items, is_back):
         global drone
         termination_task = asyncio.ensure_future(
             self.observe_is_in_air(drone))  # 需测试一下能不能加这句话
@@ -561,7 +608,8 @@ class Ui_MainWindow(QMainWindow):
         goto_thread.start()
 
     def goto_thread(self, i):
-        self.loop.run_until_complete(self.goto_drone(tar_pos[i], bomb_altitude, bomb_yaw, bomb_speed))
+        # self.loop.run_until_complete(self.goto_drone(tar_pos[i], bomb_altitude, bomb_yaw, bomb_speed))
+        self.loop.run_until_complete(self.mission_drone(bomb_mission[i], True))
 
     async def goto_drone(self, target, altitude, yaw, speed):
         global drone
@@ -712,6 +760,8 @@ class Ui_MainWindow(QMainWindow):
                                            agnostic=self.opt.agnostic_nms)
                 # Process detections
                 for i, det in enumerate(pred):  # detections per image
+                    annotator = Annotator(showimg, line_width=2, example=str(self.names))
+                    camshift_img = annotator.result()
                     if det is not None and len(det):
                         # Rescale boxes from img_size to im0 size
                         det[:, :4] = scale_coords(
@@ -723,9 +773,11 @@ class Ui_MainWindow(QMainWindow):
                             # label = '%s' % (self.names[int(cls)])
                             img_list.append(xywh)
                             name_list.append(self.names[int(cls)])
-                            print(label)
-                            plot_one_box(
-                                xyxy, showimg, label=label, color=self.colors[int(cls)], line_thickness=2)
+                            # print(label)
+                            annotator.box_label(xyxy, label=label, color=self.colors[int(cls)])#目标框
+                            showimg = annotator.result()
+                            # plot_one_box(
+                            #     xyxy, showimg, label=label, color=self.colors[int(cls)], line_thickness=2)
 
                         bombthread_yolo = threading.Thread(target=self.bomb_func)
                         if ((len(img_list) > 0) & ('red' in name_list)):  # 如果检测到目标
@@ -745,7 +797,7 @@ class Ui_MainWindow(QMainWindow):
                     cv2.circle(showimg, (pos_x, pos_y), 25, (255, 0, 0), 2)
 
                     if trackObject != 0:
-                        hsv =  cv2.cvtColor(showimg, cv2.COLOR_BGR2HSV)  # RGB转为HSV更好处理
+                        hsv =  cv2.cvtColor(camshift_img, cv2.COLOR_BGR2HSV)  # RGB转为HSV更好处理
                         mask = cv2.inRange(hsv, np.array((0., 30.,10.)), np.array((180.,256.,255.)))
                         if trackObject == -1:
                             track_window=(xs,ys,ws,hs)  # 设置跟踪框参数
