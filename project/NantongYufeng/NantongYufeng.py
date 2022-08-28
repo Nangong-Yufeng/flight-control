@@ -43,6 +43,7 @@ from utils.general import check_img_size, check_suffix, non_max_suppression, sca
 from utils.plots import Annotator
 from utils.torch_utils import select_device
 import nest_asyncio
+import json
 
 nest_asyncio.apply()
 # __import__('IPython').embed()
@@ -88,12 +89,16 @@ camshift_status = False
 roi_hist = [[0.0]]
 track_window=(0, 0, 0, 0)  # 设置跟踪框参数
 
-# 调用高德地图http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}
-Map = folium.Map(location=[22.5907, 113.9623],
-                 zoom_start=16,
+# 高德地图http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}
+map_lat = 22.5907
+map_lon = 113.9623
+Map = folium.Map(location=[map_lat, map_lon],
+                 max_zoom=19, 
+                 zoom_start=18, 
                  crs="EPSG3857", 
                  control_scale=True,
-                 tiles='http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}',
+                #  tiles='http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}',
+                 tiles = 'OpenStreetMap',  # 使用OpenStreetMap
                  attr='default')
 folium.CircleMarker(
     location=[22.5907, 113.9623],
@@ -102,6 +107,21 @@ folium.CircleMarker(
     color='#DC143C',      # 圈的颜色
     fill=True,
     fill_color='#6495E'  # 填充颜色
+).add_to(Map)
+folium.Marker(
+    location=[tar_pos[0][0], tar_pos[0][1]],
+    popup="target1",
+    icon=folium.Icon(icon="battery-0", prefix='fa'),
+).add_to(Map)
+folium.Marker(
+    location=[tar_pos[1][0], tar_pos[1][1]],
+    popup="target2",
+    icon=folium.Icon(icon="battery-1", prefix='fa'),
+).add_to(Map)
+folium.Marker(
+    location=[tar_pos[2][0], tar_pos[2][1]],
+    popup="target3",
+    icon=folium.Icon(icon="battery-2", prefix='fa'),
 ).add_to(Map)
 Map.add_child(folium.LatLngPopup())                     # 显示鼠标点击点经纬度
 Map.add_child(folium.ClickForMarker(popup='Waypoint'))  # 将鼠标点击点添加到地图上
@@ -193,6 +213,15 @@ bomb3 = [MissionItem(tar_pos[2][0],
                      float('nan'),
                      float('nan'))]
 bomb_mission = [bomb1, bomb2, bomb3]
+
+
+try:
+    tar_pos = json.load(open("tar_pos_json.json", "r"))
+    print(tar_pos)
+except FileNotFoundError:
+    print("没这个文件捏")
+
+
 class Ui_MainWindow(QMainWindow):
     def __init__(self, loop):
         super(QMainWindow, self).__init__()
@@ -336,6 +365,9 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_17 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_17.setGeometry(QtCore.QRect(30, 910, 260, 30))
         self.pushButton_17.setObjectName("pushButton_17")
+        self.pushButton_18 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_18.setGeometry(QtCore.QRect(350, 910, 260, 30))
+        self.pushButton_18.setObjectName("pushButton_18")
 
         self.label_1 = QtWidgets.QLabel(self.centralwidget)
         self.label_1.setGeometry(QtCore.QRect(990, 560, 260, 30))
@@ -417,6 +449,7 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_15.setText(_translate("MainWindow", "立即投弹(手动)"))
         self.pushButton_16.setText(_translate("MainWindow", "启动目标追踪"))
         self.pushButton_17.setText(_translate("MainWindow", "开启数据追踪"))
+        self.pushButton_18.setText(_translate("MainWindow", "DEBUG BUTTON"))
         self.pushButton_16.setDisabled(True)
 
         self.label_1.setText(_translate("MainWindow", "高度:"+'下面写着呢'))
@@ -454,6 +487,23 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_14.clicked.connect(self.bomb_mode)
         self.pushButton_15.clicked.connect(self.drop_bomb)
         self.pushButton_17.clicked.connect(self.start_refresh)
+        self.pushButton_18.clicked.connect(self.debug_add_points)
+
+    def debug_add_points(self):
+        global map_lat, map_lon
+        map_lon += 0.0001
+        folium.CircleMarker(  # 航迹显示
+            location=[map_lat, map_lon], 
+            radius=1,
+            popup='popup',
+            color='#DC143C',      # 圈的颜色
+            fill=True,
+            fill_color='#6495E'  # 填充颜色
+        ).add_to(Map)
+        Map.save("sources/save_map.html")
+        path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
+        path = path.replace('\\', '/')
+        self.qwebengine.load(QUrl(path))
 
 # 数据更新模块
 # 数据更新模块
@@ -471,6 +521,14 @@ class Ui_MainWindow(QMainWindow):
             self.label_9.setText(_translate("MainWindow", "经度:"+str(lon_deg)))
             self.label_11.setText(_translate("MainWindow", "绝对高度:"+str(abs_alt)))
             self.label_12.setText(_translate("MainWindow", "相对高度:"+str(rel_alt)))
+            folium.CircleMarker(  # 航迹显示
+                location=[float(lat_deg), float(lon_deg)],
+                radius=1,
+                popup='popup',
+                color='#DC143C',      # 圈的颜色
+                fill=True,
+                fill_color='#6495E'  # 填充颜色
+            ).add_to(Map)
 
     async def refresh_airspd(self):
         global speed
@@ -524,6 +582,7 @@ class Ui_MainWindow(QMainWindow):
 
     def set_tar_pos_thread(self, i, tar_pos):
         self.loop.run_until_complete(self.set_tar_pos_drone(i, tar_pos))
+        json.dump(tar_pos, open("tar_pos_json.json", "w"), indent=4, separators=(',', ":"), ensure_ascii=False)
 
     async def set_tar_pos_drone(self, i, tar_pos):
         global drone
