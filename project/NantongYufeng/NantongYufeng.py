@@ -42,6 +42,7 @@ from yoloV5.utils.datasets import LoadStreams
 from yoloV5.utils.general import check_img_size, check_suffix, non_max_suppression, scale_coords, xyxy2xywh
 from yoloV5.utils.plots import Annotator
 from yoloV5.utils.torch_utils import select_device
+from utils import map, jsonIO
 import nest_asyncio
 import json
 
@@ -92,134 +93,14 @@ track_window=(0, 0, 0, 0)  # 设置跟踪框参数
 # 高德地图http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}
 map_lat = 22.5907
 map_lon = 113.9623
-Map = folium.Map(location=[map_lat, map_lon],
-                 max_zoom=19, 
-                 zoom_start=18, 
-                 crs="EPSG3857", 
-                 control_scale=True,
-                #  tiles='http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}',
-                 tiles = 'OpenStreetMap',  # 使用OpenStreetMap
-                 attr='default')
-folium.CircleMarker(
-    location=[22.5907, 113.9623],
-    radius=1,
-    popup='popup',
-    color='#DC143C',      # 圈的颜色
-    fill=True,
-    fill_color='#6495E'  # 填充颜色
-).add_to(Map)
-folium.Marker(
-    location=[tar_pos[0][0], tar_pos[0][1]],
-    popup="target1",
-    icon=folium.Icon(icon="battery-0", prefix='fa'),
-).add_to(Map)
-folium.Marker(
-    location=[tar_pos[1][0], tar_pos[1][1]],
-    popup="target2",
-    icon=folium.Icon(icon="battery-1", prefix='fa'),
-).add_to(Map)
-folium.Marker(
-    location=[tar_pos[2][0], tar_pos[2][1]],
-    popup="target3",
-    icon=folium.Icon(icon="battery-2", prefix='fa'),
-).add_to(Map)
-Map.add_child(folium.LatLngPopup())                     # 显示鼠标点击点经纬度
-Map.add_child(folium.ClickForMarker(popup='Waypoint'))  # 将鼠标点击点添加到地图上
+Map = map.createMap(map_lat, map_lon)
+tar_pos = jsonIO.get_tar_pos()
+map.mark3Points(Map, tar_pos=tar_pos)
 Map.save("sources/save_map.html")
 
 _translate = QtCore.QCoreApplication.translate
 
 # 设置侦察任务
-scout_mission = [MissionItem(tar_pos[0][0],
-                             tar_pos[0][1],
-                             25,
-                             10,
-                             True,
-                             float('nan'),
-                             float('nan'),
-                             MissionItem.CameraAction.NONE,
-                             float('nan'),
-                             float('nan'),
-                             float('nan'),
-                             float('nan'),
-                             float('nan')),
-                 MissionItem(tar_pos[1][0],
-                             tar_pos[1][1],
-                             25,
-                             10,
-                             True,
-                             float('nan'),
-                             float('nan'),
-                             MissionItem.CameraAction.NONE,
-                             float('nan'),
-                             float('nan'),
-                             float('nan'),
-                             float('nan'),
-                             float('nan')),
-                 MissionItem(tar_pos[2][0],
-                             tar_pos[2][1],
-                             25,
-                             10,
-                             True,
-                             float('nan'),
-                             float('nan'),
-                             MissionItem.CameraAction.NONE,
-                             float('nan'),
-                             float('nan'),
-                             float('nan'),
-                             float('nan'),
-                             float('nan'))]
-bomb1 = [MissionItem(tar_pos[0][0],
-                     tar_pos[0][1],
-                     25,
-                     10,
-                     True,
-                     float('nan'),
-                     float('nan'),
-                     MissionItem.CameraAction.NONE,
-                     float('nan'),
-                     float('nan'),
-                     float('nan'),
-                     float('nan'),
-                     float('nan'))]
-
-# 设置打击任务2
-bomb2 = [MissionItem(tar_pos[1][0],
-                     tar_pos[1][1],
-                     25,
-                     10,
-                     True,
-                     float('nan'),
-                     float('nan'),
-                     MissionItem.CameraAction.NONE,
-                     float('nan'),
-                     float('nan'),
-                     float('nan'),
-                     float('nan'),
-                     float('nan'))]
-
-# 设置打击任务3
-bomb3 = [MissionItem(tar_pos[2][0],
-                     tar_pos[2][1],
-                     25,
-                     10,
-                     True,
-                     float('nan'),
-                     float('nan'),
-                     MissionItem.CameraAction.NONE,
-                     float('nan'),
-                     float('nan'),
-                     float('nan'),
-                     float('nan'),
-                     float('nan'))]
-bomb_mission = [bomb1, bomb2, bomb3]
-
-
-try:
-    tar_pos = json.load(open("tar_pos_json.json", "r"))
-    print(tar_pos)
-except FileNotFoundError:
-    print("没这个文件捏")
 
 
 class Ui_MainWindow(QMainWindow):
@@ -510,8 +391,10 @@ class Ui_MainWindow(QMainWindow):
 # 数据更新模块
 
     async def refresh_position(self):
+        i = 0
         global lat_deg, lon_deg, abs_alt, rel_alt
         async for position in drone.telemetry.position():
+            i += 1
             # print(position)
             lat_deg = round(position.latitude_deg, 7)
             lon_deg = round(position.longitude_deg, 7)
@@ -529,6 +412,11 @@ class Ui_MainWindow(QMainWindow):
                 fill=True,
                 fill_color='#6495E'  # 填充颜色
             ).add_to(Map)
+            if(i%10 == 0):
+                Map.save("sources/save_map.html")
+                path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
+                path = path.replace('\\', '/')
+                self.qwebengine.load(QUrl(path))
 
     async def refresh_airspd(self):
         global speed
@@ -622,6 +510,45 @@ class Ui_MainWindow(QMainWindow):
         scout_mission_thread.start()
 
     def scout_mission_thread(self):
+        scout_mission = [MissionItem(tar_pos[0][0],
+                                    tar_pos[0][1],
+                                    15,
+                                    10,
+                                    True,
+                                    float('nan'),
+                                    float('nan'),
+                                    MissionItem.CameraAction.NONE,
+                                    float('nan'),
+                                    float('nan'),
+                                    float('nan'),
+                                    float('nan'),
+                                    float('nan')),
+                        MissionItem(tar_pos[1][0],
+                                    tar_pos[1][1],
+                                    15,
+                                    10,
+                                    True,
+                                    float('nan'),
+                                    float('nan'),
+                                    MissionItem.CameraAction.NONE,
+                                    float('nan'),
+                                    float('nan'),
+                                    float('nan'),
+                                    float('nan'),
+                                    float('nan')),
+                        MissionItem(tar_pos[2][0],
+                                    tar_pos[2][1],
+                                    15,
+                                    10,
+                                    True,
+                                    float('nan'),
+                                    float('nan'),
+                                    MissionItem.CameraAction.NONE,
+                                    float('nan'),
+                                    float('nan'),
+                                    float('nan'),
+                                    float('nan'),
+                                    float('nan'))]
         self.loop.run_until_complete(self.mission_drone(scout_mission, False))
 
     async def mission_drone(self, mission_items, is_back):
@@ -668,6 +595,51 @@ class Ui_MainWindow(QMainWindow):
 
     def goto_thread(self, i):
         # self.loop.run_until_complete(self.goto_drone(tar_pos[i], bomb_altitude, bomb_yaw, bomb_speed))
+        bomb1 = [MissionItem(tar_pos[0][0],
+                            tar_pos[0][1],
+                            15,
+                            10,
+                            True,
+                            float('nan'),
+                            float('nan'),
+                            MissionItem.CameraAction.NONE,
+                            float('nan'),
+                            float('nan'),
+                            float('nan'),
+                            float('nan'),
+                            float('nan'))]
+
+        # 设置打击任务2
+        bomb2 = [MissionItem(tar_pos[1][0],
+                            tar_pos[1][1],
+                            15,
+                            10,
+                            True,
+                            float('nan'),
+                            float('nan'),
+                            MissionItem.CameraAction.NONE,
+                            float('nan'),
+                            float('nan'),
+                            float('nan'),
+                            float('nan'),
+                            float('nan'))]
+
+        # 设置打击任务3
+        bomb3 = [MissionItem(tar_pos[2][0],
+                            tar_pos[2][1],
+                            15,
+                            10,
+                            True,
+                            float('nan'),
+                            float('nan'),
+                            MissionItem.CameraAction.NONE,
+                            float('nan'),
+                            float('nan'),
+                            float('nan'),
+                            float('nan'),
+                            float('nan'))]
+        bomb_mission = [bomb1, bomb2, bomb3]
+
         self.loop.run_until_complete(self.mission_drone(bomb_mission[i], True))
 
     async def goto_drone(self, target, altitude, yaw, speed):
