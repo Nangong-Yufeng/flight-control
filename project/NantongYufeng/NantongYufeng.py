@@ -42,7 +42,7 @@ from yoloV5.utils.datasets import LoadStreams
 from yoloV5.utils.general import check_img_size, check_suffix, non_max_suppression, scale_coords, xyxy2xywh
 from yoloV5.utils.plots import Annotator
 from yoloV5.utils.torch_utils import select_device
-from utils import map, jsonIO
+from utils import map, jsonIO, drone_control
 import nest_asyncio
 import json
 
@@ -510,45 +510,7 @@ class Ui_MainWindow(QMainWindow):
         scout_mission_thread.start()
 
     def scout_mission_thread(self):
-        scout_mission = [MissionItem(tar_pos[0][0],
-                                    tar_pos[0][1],
-                                    15,
-                                    10,
-                                    True,
-                                    float('nan'),
-                                    float('nan'),
-                                    MissionItem.CameraAction.NONE,
-                                    float('nan'),
-                                    float('nan'),
-                                    float('nan'),
-                                    float('nan'),
-                                    float('nan')),
-                        MissionItem(tar_pos[1][0],
-                                    tar_pos[1][1],
-                                    15,
-                                    10,
-                                    True,
-                                    float('nan'),
-                                    float('nan'),
-                                    MissionItem.CameraAction.NONE,
-                                    float('nan'),
-                                    float('nan'),
-                                    float('nan'),
-                                    float('nan'),
-                                    float('nan')),
-                        MissionItem(tar_pos[2][0],
-                                    tar_pos[2][1],
-                                    15,
-                                    10,
-                                    True,
-                                    float('nan'),
-                                    float('nan'),
-                                    MissionItem.CameraAction.NONE,
-                                    float('nan'),
-                                    float('nan'),
-                                    float('nan'),
-                                    float('nan'),
-                                    float('nan'))]
+        scout_mission = drone_control.get_scout_missions(tar_pos)
         self.loop.run_until_complete(self.mission_drone(scout_mission, False))
 
     async def mission_drone(self, mission_items, is_back):
@@ -594,53 +556,8 @@ class Ui_MainWindow(QMainWindow):
         goto_thread.start()
 
     def goto_thread(self, i):
-        # self.loop.run_until_complete(self.goto_drone(tar_pos[i], bomb_altitude, bomb_yaw, bomb_speed))
-        bomb1 = [MissionItem(tar_pos[0][0],
-                            tar_pos[0][1],
-                            15,
-                            10,
-                            True,
-                            float('nan'),
-                            float('nan'),
-                            MissionItem.CameraAction.NONE,
-                            float('nan'),
-                            float('nan'),
-                            float('nan'),
-                            float('nan'),
-                            float('nan'))]
-
-        # 设置打击任务2
-        bomb2 = [MissionItem(tar_pos[1][0],
-                            tar_pos[1][1],
-                            15,
-                            10,
-                            True,
-                            float('nan'),
-                            float('nan'),
-                            MissionItem.CameraAction.NONE,
-                            float('nan'),
-                            float('nan'),
-                            float('nan'),
-                            float('nan'),
-                            float('nan'))]
-
-        # 设置打击任务3
-        bomb3 = [MissionItem(tar_pos[2][0],
-                            tar_pos[2][1],
-                            15,
-                            10,
-                            True,
-                            float('nan'),
-                            float('nan'),
-                            MissionItem.CameraAction.NONE,
-                            float('nan'),
-                            float('nan'),
-                            float('nan'),
-                            float('nan'),
-                            float('nan'))]
-        bomb_mission = [bomb1, bomb2, bomb3]
-
-        self.loop.run_until_complete(self.mission_drone(bomb_mission[i], True))
+        bomb_missions = drone_control.get_bomb_mission(tar_pos)
+        self.loop.run_until_complete(self.mission_drone(bomb_missions[i], True))
 
     async def goto_drone(self, target, altitude, yaw, speed):
         global drone
