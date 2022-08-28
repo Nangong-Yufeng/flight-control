@@ -30,18 +30,18 @@ import numpy as np
 import torch.backends.cudnn as cudnn
 import threading
 import asyncio
-from utils.torch_utils import select_device
-from models.experimental import attempt_load
-from utils.general import check_img_size, non_max_suppression, scale_coords, xyxy2xywh
-from utils.datasets import letterbox
-from utils.plots import Annotator
+from yoloV5.utils.torch_utils import select_device
+from yoloV5.models.experimental import attempt_load
+from yoloV5.utils.general import check_img_size, non_max_suppression, scale_coords, xyxy2xywh
+from yoloV5.utils.datasets import letterbox
+from yoloV5.utils.plots import Annotator
 from mavsdk import System
 from mavsdk.mission import *
-from models.experimental import attempt_load
-from utils.datasets import LoadStreams
-from utils.general import check_img_size, check_suffix, non_max_suppression, scale_coords, xyxy2xywh
-from utils.plots import Annotator
-from utils.torch_utils import select_device
+from yoloV5.models.experimental import attempt_load
+from yoloV5.utils.datasets import LoadStreams
+from yoloV5.utils.general import check_img_size, check_suffix, non_max_suppression, scale_coords, xyxy2xywh
+from yoloV5.utils.plots import Annotator
+from yoloV5.utils.torch_utils import select_device
 import nest_asyncio
 import json
 
@@ -235,7 +235,7 @@ class Ui_MainWindow(QMainWindow):
 
         parser = argparse.ArgumentParser()
         parser.add_argument('--weights', nargs='+', type=str,
-                            default='weights/best.pt', help='model.pt path(s)')
+                            default='yoloV5/weights/best.pt', help='model.pt path(s)')
         # file/folder, 0 for webcam
         parser.add_argument('--source', type=str,
                             default='data/images', help='source')
