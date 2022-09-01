@@ -15,6 +15,7 @@ from math import fabs
 from operator import is_
 from platform import release
 import tarfile
+from time import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -45,7 +46,7 @@ from yoloV5.utils.torch_utils import select_device
 from utils import map, jsonIO, drone_control
 import nest_asyncio
 import json
-
+import time
 nest_asyncio.apply()
 # __import__('IPython').embed()
 
@@ -91,8 +92,8 @@ roi_hist = [[0.0]]
 track_window=(0, 0, 0, 0)  # 设置跟踪框参数
 
 # 高德地图http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}
-map_lat = 22.5907
-map_lon = 113.9623
+map_lat = 22.5907396
+map_lon = 113.9755125
 Map = map.createMap(map_lat, map_lon)
 tar_pos = jsonIO.get_tar_pos()
 map.mark3Points(Map, tar_pos=tar_pos)
@@ -249,6 +250,18 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_18 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_18.setGeometry(QtCore.QRect(350, 910, 260, 30))
         self.pushButton_18.setObjectName("pushButton_18")
+        self.pushButton_19 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_19.setGeometry(QtCore.QRect(670, 910, 260, 30))
+        self.pushButton_19.setObjectName("pushButton_19")
+        self.pushButton_20 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_20.setGeometry(QtCore.QRect(30, 960, 260, 30))
+        self.pushButton_20.setObjectName("pushButton_20")
+        self.pushButton_21 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_21.setGeometry(QtCore.QRect(350, 960, 260, 30))
+        self.pushButton_21.setObjectName("pushButton_21")
+        self.pushButton_22 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_22.setGeometry(QtCore.QRect(670, 960, 260, 30))
+        self.pushButton_22.setObjectName("pushButton_22")
 
         self.label_1 = QtWidgets.QLabel(self.centralwidget)
         self.label_1.setGeometry(QtCore.QRect(990, 560, 260, 30))
@@ -330,7 +343,11 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_15.setText(_translate("MainWindow", "立即投弹(手动)"))
         self.pushButton_16.setText(_translate("MainWindow", "启动目标追踪"))
         self.pushButton_17.setText(_translate("MainWindow", "开启数据追踪"))
-        self.pushButton_18.setText(_translate("MainWindow", "DEBUG BUTTON"))
+        self.pushButton_18.setText(_translate("MainWindow", "DEBUG BUTTON 01"))
+        self.pushButton_19.setText(_translate("MainWindow", "DEBUG BUTTON 02"))
+        self.pushButton_20.setText(_translate("MainWindow", "左偏航"))
+        self.pushButton_21.setText(_translate("MainWindow", "偏航归中"))
+        self.pushButton_22.setText(_translate("MainWindow", "右偏航"))
         self.pushButton_16.setDisabled(True)
 
         self.label_1.setText(_translate("MainWindow", "高度:"+'下面写着呢'))
@@ -368,24 +385,49 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_14.clicked.connect(self.bomb_mode)
         self.pushButton_15.clicked.connect(self.drop_bomb)
         self.pushButton_17.clicked.connect(self.start_refresh)
-        self.pushButton_18.clicked.connect(self.debug_add_points)
+        self.pushButton_18.clicked.connect(lambda: self.rudder_control(0.9))
+        self.pushButton_19.clicked.connect(lambda: self.rudder_control(-0.9))
+        self.pushButton_20.clicked.connect(lambda: self.rudder_control(0.9))
+        self.pushButton_21.clicked.connect(lambda: self.rudder_control(0))
+        self.pushButton_22.clicked.connect(lambda: self.rudder_control(0.9))
+
+
+    def rudder_control(self, i):
+        threading.Thread(target=self.rudder_control_thread, args=(i,)).start()
+
+    def rudder_control_thread(self, i):
+        self.loop.run_until_complete(self.rudder_control_drone(i))
+
+    async def rudder_control_drone(self, i):
+        await drone.action.set_actuator(2, i)
+
+    def debug_set_para(self):
+        threading.Thread(target=self.debug_set_para_thread).start()
+
+    def debug_set_para_thread(self):
+        self.loop.run_until_complete(self.debug_set_para_drone())
+
+    async def debug_set_para_drone(self):
+        print('before set_para', await drone.param.get_param_int("PWM_AUX_FUNC2"))
+        await drone.param.set_param_int("PWM_AUX_FUNC2", 203)
+        print('after set_para', await drone.param.get_param_int("PWM_AUX_FUNC2"))
 
     def debug_add_points(self):
         global map_lat, map_lon
-        map_lon += 0.0001
-        folium.CircleMarker(  # 航迹显示
-            location=[map_lat, map_lon], 
-            radius=1,
-            popup='popup',
-            color='#DC143C',      # 圈的颜色
-            fill=True,
-            fill_color='#6495E'  # 填充颜色
-        ).add_to(Map)
-        Map.save("sources/save_map.html")
+        # map_lon += 0.0001
+        # folium.CircleMarker(  # 航迹显示
+        #     location=[map_lat, map_lon], 
+        #     radius=1,
+        #     popup='popup',
+        #     color='#DC143C',      # 圈的颜色
+        #     fill=True,
+        #     fill_color='#6495E'  # 填充颜色
+        # ).add_to(Map)
+        # Map.save("sources/save_map.html")
         path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
         path = path.replace('\\', '/')
         self.qwebengine.load(QUrl(path))
-
+            
 # 数据更新模块
 # 数据更新模块
 # 数据更新模块
@@ -416,7 +458,8 @@ class Ui_MainWindow(QMainWindow):
                 Map.save("sources/save_map.html")
                 path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
                 path = path.replace('\\', '/')
-                self.qwebengine.load(QUrl(path))
+                # self.qwebengine.load(QUrl(path))
+                # print('refresh map')
 
     async def refresh_airspd(self):
         global speed
@@ -429,6 +472,7 @@ class Ui_MainWindow(QMainWindow):
         global battery
         async for drone_battery in drone.telemetry.battery():
             battery = round(drone_battery.remaining_percent, 2)
+            battery = 2.2 * battery + 2.0
             self.label_3.setText(_translate("MainWindow", "电池"+str(battery)))
 
     async def refresh_angularvelocity(self):
@@ -502,8 +546,15 @@ class Ui_MainWindow(QMainWindow):
         threading.Thread(target=self.start_refresh_thread).start()
 
     def start_refresh_thread(self):
+        global Map
         tasks = [self.refresh_airspd(), self.refresh_position(), self.refresh_angularvelocity(), self.refresh_battery(), self.refresh_eulerangle(), self.refresh_flightmode(), self.refresh_num_satellites()]
         self.loop.run_until_complete(asyncio.wait(tasks))
+        # Map = map.createMap(float(lat_deg), float(lon_deg))
+        # map.mark3Points(Map, tar_pos=tar_pos)
+        # Map.save("sources/save_map.html")
+        # path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
+        # path = path.replace('\\', '/')
+        # self.qwebengine.load(QUrl(path))
 
     def scout_mission(self):
         scout_mission_thread = threading.Thread(target=self.scout_mission_thread)
@@ -662,7 +713,7 @@ class Ui_MainWindow(QMainWindow):
     def button_camera_open(self):
         if not self.timer_video.isActive():
             # 默认使用第一个本地camera
-            flag = self.cap.open(0)
+            flag = self.cap.open(1)
             if flag == False:
                 QtWidgets.QMessageBox.warning(
                     self, u"Warning", u"打开摄像头失败", buttons=QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.Ok)

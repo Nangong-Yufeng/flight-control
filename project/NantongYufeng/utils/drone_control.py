@@ -12,7 +12,7 @@ def get_scout_missions(tar_pos):
                                 MissionItem.CameraAction.NONE,
                                 float('nan'),
                                 float('nan'),
-                                float('nan'),
+                                float('1'),
                                 float('nan'),
                                 float('nan')),
                     MissionItem(tar_pos[1][0],
@@ -25,7 +25,7 @@ def get_scout_missions(tar_pos):
                                 MissionItem.CameraAction.NONE,
                                 float('nan'),
                                 float('nan'),
-                                float('nan'),
+                                float('1'),
                                 float('nan'),
                                 float('nan')),
                     MissionItem(tar_pos[2][0],
@@ -38,7 +38,7 @@ def get_scout_missions(tar_pos):
                                 MissionItem.CameraAction.NONE,
                                 float('nan'),
                                 float('nan'),
-                                float('nan'),
+                                float('1'),
                                 float('nan'),
                                 float('nan'))]
     return  scout_mission
@@ -54,7 +54,7 @@ def get_bomb_mission(tar_pos):
                     MissionItem.CameraAction.NONE,
                     float('nan'),
                     float('nan'),
-                    float('nan'),
+                    float('2'),
                     float('nan'),
                     float('nan'))]
 
@@ -69,7 +69,7 @@ def get_bomb_mission(tar_pos):
                         MissionItem.CameraAction.NONE,
                         float('nan'),
                         float('nan'),
-                        float('nan'),
+                        float('2'),
                         float('nan'),
                         float('nan'))]
 
@@ -84,7 +84,7 @@ def get_bomb_mission(tar_pos):
                         MissionItem.CameraAction.NONE,
                         float('nan'),
                         float('nan'),
-                        float('nan'),
+                        float('2'),
                         float('nan'),
                         float('nan'))]
     return [bomb1, bomb2, bomb3]
