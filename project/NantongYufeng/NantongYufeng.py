@@ -11,6 +11,7 @@
 from ast import arg
 from concurrent.futures import thread
 from glob import glob
+from math import cos, fabs, pi, radians, sin
 from math import fabs
 from operator import is_
 from platform import release
@@ -343,8 +344,8 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_15.setText(_translate("MainWindow", "立即投弹(手动)"))
         self.pushButton_16.setText(_translate("MainWindow", "启动目标追踪"))
         self.pushButton_17.setText(_translate("MainWindow", "开启数据追踪"))
-        self.pushButton_18.setText(_translate("MainWindow", "DEBUG BUTTON 01"))
-        self.pushButton_19.setText(_translate("MainWindow", "DEBUG BUTTON 02"))
+        self.pushButton_18.setText(_translate("MainWindow", "相机向前"))
+        self.pushButton_19.setText(_translate("MainWindow", "相机向下"))
         self.pushButton_20.setText(_translate("MainWindow", "左偏航"))
         self.pushButton_21.setText(_translate("MainWindow", "偏航归中"))
         self.pushButton_22.setText(_translate("MainWindow", "右偏航"))
@@ -385,11 +386,38 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_14.clicked.connect(self.bomb_mode)
         self.pushButton_15.clicked.connect(self.drop_bomb)
         self.pushButton_17.clicked.connect(self.start_refresh)
-        self.pushButton_18.clicked.connect(lambda: self.rudder_control(0.9))
-        self.pushButton_19.clicked.connect(lambda: self.rudder_control(-0.9))
-        self.pushButton_20.clicked.connect(lambda: self.rudder_control(0.9))
+        self.pushButton_18.clicked.connect(lambda: self.rudder_control(-0.6))
+        self.pushButton_19.clicked.connect(lambda: self.rudder_control(0))
+        self.pushButton_20.clicked.connect(lambda: self.go_deg(-45))
+        # self.pushButton_20.clicked.connect(lambda: self.rudder_control(0.9))
         self.pushButton_21.clicked.connect(lambda: self.rudder_control(0))
-        self.pushButton_22.clicked.connect(lambda: self.rudder_control(0.9))
+        self.pushButton_22.clicked.connect(lambda: self.go_deg(45))
+
+    def go_deg(self, deg):
+        threading.Thread(target=self.go_deg_thread, args=(deg, )).start()
+
+    def go_deg_thread(self, deg):
+        self.loop.run_until_complete(self.go_deg_drone(deg))
+
+    async def go_deg_drone(self, deg):
+        now_position = await self.get_position()
+        now_yaw_deg = await self.get_yaw_degree()
+        print('now yaw_deg = ', now_yaw_deg)
+        print('now position = ', now_position.latitude_deg, now_position.longitude_deg)
+        print('lat_delta = ', 0.005 * cos(radians(now_yaw_deg + deg)), 'lon_delta = ', 0.005 * sin(radians(now_yaw_deg + deg)))  # 注意角度和弧度的转化
+        goto_lat = now_position.latitude_deg + 0.005 * cos(radians(now_yaw_deg + deg))
+        goto_lon = now_position.longitude_deg + 0.005 * sin(radians(now_yaw_deg + deg))
+        
+        print('now going to ', goto_lat, goto_lon)
+        await drone.action.goto_location(goto_lat, goto_lon, 50, 0)
+
+    async def get_yaw_degree(self):
+        async for eularangle in drone.telemetry.attitude_euler():
+            return eularangle.yaw_deg
+
+    async def get_position(self):
+        async for positon_getted in drone.telemetry.position():
+            return positon_getted
 
 
     def rudder_control(self, i):
