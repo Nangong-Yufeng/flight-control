@@ -11,11 +11,11 @@
 from ast import arg
 from concurrent.futures import thread
 from glob import glob
-from math import fabs
+from math import cos, fabs, pi, radians, sin
 from operator import is_
 from platform import release
 import tarfile
-from turtle import pos
+from turtle import pos, position
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -38,6 +38,8 @@ import asyncio
 # from utils.plots import plot_one_box
 from mavsdk import System
 from mavsdk.mission import *
+import nest_asyncio
+nest_asyncio.apply()
 
 
 hight = 'null'  # 高度
@@ -62,8 +64,8 @@ bomb_flag = False
 pos_x = 320
 pos_y = 240
 
-tar_pos = [[22.5907503, 113.9623144], [22.58739, 113.96771],
-       [22.58680, 113.96645]]  # 设置标靶坐标, 这个是为了goto和mission使用的
+tar_pos = [[22.5907396, 113.9755125], [22.59050809, 113.9750981],
+       [22.5902192, 113.9754614]]  # 设置标靶坐标, 这个是为了goto和mission使用的
 bomb_altitude = 30  # 设置投弹时的 **绝对** 高度
 bomb_yaw = 0  # 设置投弹时的偏航角度 bomb
 bomb_speed = 10  # 设置投弹时的速度
@@ -113,7 +115,7 @@ scout_mission = [MissionItem(tar_pos[0][0],
                              MissionItem.CameraAction.NONE,
                              float('nan'),
                              float('nan'),
-                             float('nan'),
+                             float('2'),
                              float('nan'),
                              float('nan')),
                  MissionItem(tar_pos[1][0],
@@ -126,7 +128,7 @@ scout_mission = [MissionItem(tar_pos[0][0],
                              MissionItem.CameraAction.NONE,
                              float('nan'),
                              float('nan'),
-                             float('nan'),
+                             float('2'),
                              float('nan'),
                              float('nan')),
                  MissionItem(tar_pos[2][0],
@@ -139,7 +141,7 @@ scout_mission = [MissionItem(tar_pos[0][0],
                              MissionItem.CameraAction.NONE,
                              float('nan'),
                              float('nan'),
-                             float('nan'),
+                             float('2'),
                              float('nan'),
                              float('nan'))]
 
@@ -290,6 +292,21 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_17 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_17.setGeometry(QtCore.QRect(30, 910, 260, 30))
         self.pushButton_17.setObjectName("pushButton_17")
+        self.pushButton_18 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_18.setGeometry(QtCore.QRect(350, 910, 260, 30))
+        self.pushButton_18.setObjectName("pushButton_18")
+        self.pushButton_19 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_19.setGeometry(QtCore.QRect(670, 910, 260, 30))
+        self.pushButton_19.setObjectName("pushButton_19")
+        self.pushButton_20 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_20.setGeometry(QtCore.QRect(30, 960, 260, 30))
+        self.pushButton_20.setObjectName("pushButton_20")
+        self.pushButton_21 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_21.setGeometry(QtCore.QRect(350, 960, 260, 30))
+        self.pushButton_21.setObjectName("pushButton_21")
+        self.pushButton_22 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_22.setGeometry(QtCore.QRect(670, 960, 260, 30))
+        self.pushButton_22.setObjectName("pushButton_22")
 
         self.label_1 = QtWidgets.QLabel(self.centralwidget)
         self.label_1.setGeometry(QtCore.QRect(990, 560, 260, 30))
@@ -371,6 +388,12 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_15.setText(_translate("MainWindow", "立即投弹(手动)"))
         self.pushButton_16.setText(_translate("MainWindow", "启动目标追踪"))
         self.pushButton_17.setText(_translate("MainWindow", "开启数据追踪"))
+        self.pushButton_18.setText(_translate("MainWindow", "DEBUG BUTTON 01"))
+        self.pushButton_19.setText(_translate("MainWindow", "DEBUG BUTTON 02"))
+        self.pushButton_20.setText(_translate("MainWindow", "左偏航"))
+        self.pushButton_21.setText(_translate("MainWindow", "偏航归中"))
+        self.pushButton_22.setText(_translate("MainWindow", "右偏航"))
+
         self.pushButton_16.setDisabled(True)
 
         self.label_1.setText(_translate("MainWindow", "高度:"+'下面写着呢'))
@@ -408,6 +431,93 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_14.clicked.connect(self.bomb_mode)
         self.pushButton_15.clicked.connect(self.drop_bomb)
         self.pushButton_17.clicked.connect(self.start_refresh)
+        self.pushButton_18.clicked.connect(lambda: self.rudder_control(0.9))
+        self.pushButton_19.clicked.connect(lambda: self.rudder_control(-0.9))
+        self.pushButton_20.clicked.connect(lambda: self.go_deg(-45))
+        # self.pushButton_20.clicked.connect(lambda: self.rudder_control(0.9))
+        self.pushButton_21.clicked.connect(lambda: self.rudder_control(0))
+        self.pushButton_22.clicked.connect(lambda: self.go_deg(45))
+
+    def go_deg(self, deg):
+        threading.Thread(target=self.go_deg_thread, args=(deg, )).start()
+
+    def go_deg_thread(self, deg):
+        self.loop.run_until_complete(self.go_deg_drone(deg))
+
+    async def go_deg_drone(self, deg):
+        now_position = await self.get_position()
+        now_yaw_deg = await self.get_yaw_degree()
+        print('now yaw_deg = ', now_yaw_deg)
+        print('now position = ', now_position.latitude_deg, now_position.longitude_deg)
+        print('lat_delta = ', 0.005 * cos(radians(now_yaw_deg + deg)), 'lon_delta = ', 0.005 * sin(radians(now_yaw_deg + deg)))  # 注意角度和弧度的转化
+        goto_lat = now_position.latitude_deg + 0.005 * cos(radians(now_yaw_deg + deg))
+        goto_lon = now_position.longitude_deg + 0.005 * sin(radians(now_yaw_deg + deg))
+        
+        print('now going to ', goto_lat, goto_lon)
+        await drone.action.goto_location(goto_lat, goto_lon, 50, 0)
+
+    async def get_yaw_degree(self):
+        async for eularangle in drone.telemetry.attitude_euler():
+            return eularangle.yaw_deg
+
+    async def get_position(self):
+        async for positon_getted in drone.telemetry.position():
+            return positon_getted
+
+    # def go_left_45(self):
+    #     threading.Thread(target=self.go_left_45_thread).start()
+
+    # def go_left_45_thread(self):
+    #     self.loop.run_until_complete(self.go_left_45_drone())
+
+    # async def go_left_45_drone(self):
+    #     now_position = await self.get_position()
+    #     now_yaw_deg = await self.get_yaw_degree()
+    #     print('now yaw_deg = ', now_yaw_deg)
+    #     print('now position = ', now_position.latitude_deg, now_position.longitude_deg)
+    #     print('lat_delta = ', 0.005 * cos(radians(now_yaw_deg - 45)), 'lon_delta = ', 0.005 * sin(radians(now_yaw_deg - 45)))  # 注意角度和弧度的转化
+    #     goto_lat = now_position.latitude_deg + 0.005 * cos(radians(now_yaw_deg - 45))
+    #     goto_lon = now_position.longitude_deg + 0.005 * sin(radians(now_yaw_deg - 45))
+        
+    #     print('now going to ', goto_lat, goto_lon)
+    #     await drone.action.goto_location(goto_lat, goto_lon, 50, 0)
+
+    def rudder_control(self, i):
+        threading.Thread(target=self.rudder_control_thread, args=(i,)).start()
+
+    def rudder_control_thread(self, i):
+        self.loop.run_until_complete(self.rudder_control_drone(i))
+
+    async def rudder_control_drone(self, i):
+        await drone.action.set_actuator(2, i)
+
+    def debug_set_para(self):
+        threading.Thread(target=self.debug_set_para_thread).start()
+
+    def debug_set_para_thread(self):
+        self.loop.run_until_complete(self.debug_set_para_drone())
+
+    async def debug_set_para_drone(self):
+        print('before set_para', await drone.param.get_param_int("PWM_AUX_FUNC2"))
+        await drone.param.set_param_int("PWM_AUX_FUNC2", 203)
+        print('after set_para', await drone.param.get_param_int("PWM_AUX_FUNC2"))
+
+    def debug_add_points(self):
+        global map_lat, map_lon
+        # map_lon += 0.0001
+        # folium.CircleMarker(  # 航迹显示
+        #     location=[map_lat, map_lon], 
+        #     radius=1,
+        #     popup='popup',
+        #     color='#DC143C',      # 圈的颜色
+        #     fill=True,
+        #     fill_color='#6495E'  # 填充颜色
+        # ).add_to(Map)
+        # Map.save("sources/save_map.html")
+        path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
+        path = path.replace('\\', '/')
+        self.qwebengine.load(QUrl(path))
+
 
 # 数据更新模块
 # 数据更新模块
