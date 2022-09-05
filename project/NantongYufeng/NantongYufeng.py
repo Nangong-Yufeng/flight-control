@@ -255,14 +255,20 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_19.setGeometry(QtCore.QRect(670, 910, 260, 30))
         self.pushButton_19.setObjectName("pushButton_19")
         self.pushButton_20 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_20.setGeometry(QtCore.QRect(30, 960, 260, 30))
+        self.pushButton_20.setGeometry(QtCore.QRect(990, 860, 260, 30))
         self.pushButton_20.setObjectName("pushButton_20")
         self.pushButton_21 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_21.setGeometry(QtCore.QRect(350, 960, 260, 30))
         self.pushButton_21.setObjectName("pushButton_21")
         self.pushButton_22 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_22.setGeometry(QtCore.QRect(670, 960, 260, 30))
+        self.pushButton_22.setGeometry(QtCore.QRect(1630, 860, 260, 30))
         self.pushButton_22.setObjectName("pushButton_22")
+        self.pushButton_23 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_23.setGeometry(QtCore.QRect(1310, 810, 260, 30))
+        self.pushButton_23.setObjectName("pushButton_23")
+        self.pushButton_24 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_24.setGeometry(QtCore.QRect(1310, 910, 260, 30))
+        self.pushButton_24.setObjectName("pushButton_24")
 
         self.label_1 = QtWidgets.QLabel(self.centralwidget)
         self.label_1.setGeometry(QtCore.QRect(990, 560, 260, 30))
@@ -347,8 +353,10 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_18.setText(_translate("MainWindow", "相机向前"))
         self.pushButton_19.setText(_translate("MainWindow", "相机向下"))
         self.pushButton_20.setText(_translate("MainWindow", "左偏航"))
-        self.pushButton_21.setText(_translate("MainWindow", "偏航归中"))
+        self.pushButton_21.setText(_translate("MainWindow", "刷新地图"))
         self.pushButton_22.setText(_translate("MainWindow", "右偏航"))
+        self.pushButton_23.setText(_translate("MainWindow", "上升"))
+        self.pushButton_24.setText(_translate("MainWindow", "下降"))
         self.pushButton_16.setDisabled(True)
 
         self.label_1.setText(_translate("MainWindow", "高度:"+'下面写着呢'))
@@ -388,18 +396,20 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_17.clicked.connect(self.start_refresh)
         self.pushButton_18.clicked.connect(lambda: self.rudder_control(-0.6))
         self.pushButton_19.clicked.connect(lambda: self.rudder_control(0))
-        self.pushButton_20.clicked.connect(lambda: self.go_deg(-45))
+        self.pushButton_20.clicked.connect(lambda: self.go_deg(-45, 0))
         # self.pushButton_20.clicked.connect(lambda: self.rudder_control(0.9))
-        self.pushButton_21.clicked.connect(lambda: self.rudder_control(0))
-        self.pushButton_22.clicked.connect(lambda: self.go_deg(45))
+        self.pushButton_21.clicked.connect(lambda: self.debug_add_points())
+        self.pushButton_22.clicked.connect(lambda: self.go_deg(45, 0))
+        self.pushButton_23.clicked.connect(lambda: self.go_deg(0, 2))
+        self.pushButton_24.clicked.connect(lambda: self.go_deg(0, -2))
 
-    def go_deg(self, deg):
-        threading.Thread(target=self.go_deg_thread, args=(deg, )).start()
+    def go_deg(self, deg, delta_alt):
+        threading.Thread(target=self.go_deg_thread, args=(deg, delta_alt)).start()
 
-    def go_deg_thread(self, deg):
-        self.loop.run_until_complete(self.go_deg_drone(deg))
+    def go_deg_thread(self, deg, delta_alt):
+        self.loop.run_until_complete(self.go_deg_drone(deg, delta_alt))
 
-    async def go_deg_drone(self, deg):
+    async def go_deg_drone(self, deg, delta_alt):
         now_position = await self.get_position()
         now_yaw_deg = await self.get_yaw_degree()
         print('now yaw_deg = ', now_yaw_deg)
@@ -407,9 +417,10 @@ class Ui_MainWindow(QMainWindow):
         print('lat_delta = ', 0.005 * cos(radians(now_yaw_deg + deg)), 'lon_delta = ', 0.005 * sin(radians(now_yaw_deg + deg)))  # 注意角度和弧度的转化
         goto_lat = now_position.latitude_deg + 0.005 * cos(radians(now_yaw_deg + deg))
         goto_lon = now_position.longitude_deg + 0.005 * sin(radians(now_yaw_deg + deg))
+        goto_alt = now_position.absolute_altitude_m + delta_alt
         
-        print('now going to ', goto_lat, goto_lon)
-        await drone.action.goto_location(goto_lat, goto_lon, 50, 0)
+        print('now going to ', goto_lat, goto_lon, goto_alt)
+        await drone.action.goto_location(goto_lat, goto_lon, goto_alt, 0)
 
     async def get_yaw_degree(self):
         async for eularangle in drone.telemetry.attitude_euler():
@@ -474,6 +485,7 @@ class Ui_MainWindow(QMainWindow):
             self.label_9.setText(_translate("MainWindow", "经度:"+str(lon_deg)))
             self.label_11.setText(_translate("MainWindow", "绝对高度:"+str(abs_alt)))
             self.label_12.setText(_translate("MainWindow", "相对高度:"+str(rel_alt)))
+            self.label_1.setText(_translate("MainWindow", "高度:"+str(rel_alt)))
             folium.CircleMarker(  # 航迹显示
                 location=[float(lat_deg), float(lon_deg)],
                 radius=1,
