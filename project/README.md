@@ -1,16 +1,18 @@
 # 对地任务的实现  
-## [认真做的地面站v1.0(NantongYufeng)](NantongYufeng)  
-### 最近事太多，只更新图片了，文字部分不可信，看图看代码自己理解
-- 目前进度 ![进度00](process.png)  
-- 它将实现:  
-  - 一键启动, 各功能集合为一体  
-  - 左上实现地图功能  
-  - 地图添加航迹与目标点显示  
-  - 右上显示视觉模块  
-  - 实现前端与后端分离  
-  - 飞行数据实时刷新  
-  - You tell me.  
-- demo文件夹中包含用于ubuntu的debug版本
+# 规则大改, 下述皆为废案, 请移步[NGYF-001](NGYF-001)
+---
+## ~~[认真做的地面站v1.0(NantongYufeng)](NantongYufeng)~~  
+### ~~最近事太多，只更新图片了，文字部分不可信，看图看代码自己理解~~
+- ~~目前进度 ![进度00](process.png)~~  
+- ~~它将实现:~~  
+  - ~~一键启动, 各功能集合为一体~~  
+  - ~~左上实现地图功能~~  
+  - ~~地图添加航迹与目标点显示~~  
+  - ~~右上显示视觉模块~~  
+  - ~~实现前端与后端分离~~  
+  - ~~飞行数据实时刷新~~  
+  - ~~You tell me.~~  
+- ~~demo文件夹中包含用于ubuntu的debug版本~~
 ## ~~[瞎做的地面站v0.1(flight_control)](flight_control)~~  
 - ~~[fly.py](flight_control/fly.py)使用按键监听并且没有图形化界面~~  
 - ~~[fly_pygame_control.py](flight_control/fly_pygame_control.py)使用图形化界面控制飞机~~
