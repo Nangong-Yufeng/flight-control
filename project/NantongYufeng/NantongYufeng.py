@@ -373,7 +373,7 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_22.setText(_translate("MainWindow", "右45"))
         self.pushButton_23.setText(_translate("MainWindow", "上升"))
         self.pushButton_24.setText(_translate("MainWindow", "下降"))
-        self.pushButton_25.setText(_translate("MainWindow", "HOLD"))
+        self.pushButton_25.setText(_translate("MainWindow", "盘旋"))
         self.pushButton_26.setText(_translate("MainWindow", "右15"))
         self.pushButton_27.setText(_translate("MainWindow", "右90"))
         self.pushButton_28.setText(_translate("MainWindow", "左90"))
@@ -435,7 +435,13 @@ class Ui_MainWindow(QMainWindow):
         self.loop.run_until_complete(self.hold_drone())
 
     async def hold_drone(self):
-        await drone.action.hold()
+        now_position = await self.get_position()
+        goto_lat = now_position.latitude_deg
+        goto_lon = now_position.longitude_deg
+        goto_alt = now_position.absolute_altitude_m
+        
+        print('now holding at ', goto_lat, goto_lon, goto_alt)
+        await drone.action.goto_location(goto_lat, goto_lon, goto_alt, 0)
 
     def go_deg(self, deg, delta_alt):
         threading.Thread(target=self.go_deg_thread, args=(deg, delta_alt)).start()
