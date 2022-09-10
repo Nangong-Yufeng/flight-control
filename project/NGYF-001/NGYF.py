@@ -3,8 +3,14 @@ from cgitb import html
 from cmath import sqrt
 from email.charset import add_alias
 from json import load
+from sqlite3 import connect
 import threading
+from time import sleep, time
 from tokenize import group
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtWebEngineWidgets import *
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import *
@@ -12,8 +18,16 @@ import sys
 import os
 import folium
 from folium.features import DivIcon
+import asyncio
+from mavsdk import System
+import nest_asyncio
 
 
+mission_route = []
+track = []
+
+
+nest_asyncio.apply()
 # 标记实心圆
 def add_red_marker(Map, location):
     folium.CircleMarker(
@@ -51,32 +65,52 @@ Map.add_child(folium.LatLngPopup())                     # 显示鼠标点击点�
 
 Map.save("save_map.html")
 
-path = "file:\\" + os.getcwd() + "\\save_map.html"
-path = path.replace('\\', '/')
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(QMainWindow, self).__init__()
+        self.setupUi(self)
+        
+
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(960, 1080)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+
         self.setWindowTitle('NGYF-001')
-        self.resize(1920, 1080)
         # 新建一个QWebEngineView()对象
         self.qwebengine = QWebEngineView(self)
         # 设置网页在窗口中显示的位置和大小
-        self.qwebengine.setGeometry(0, 0, 1920, 1080)
-        # 在QWebEngineView中加载网址
-        # path = "file:\\" + os.getcwd() + "\\save_map.html"
-        # path = path.replace('\\', '/')
-        # self.qwebengine.load(QUrl(path))
+        self.qwebengine.setGeometry(0, 0, 960, 930)
         self.loadMap()
+
+        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton.setGeometry(QtCore.QRect(0, 930, 260, 50))
+        self.pushButton.setObjectName("pushButton")
+
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1920, 22))
+        self.menubar.setObjectName("menubar")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+
+        self.pushButton.setText("刷新地图")
+
+        self.pushButton.clicked.connect(lambda: save(self))
     
     def loadMap(self):
-        path = "file:\\" + os.getcwd() + "\\save_map.html"
+        path = "file:\\/" + os.getcwd() + "\\save_map.html"
         path = path.replace('\\', '/')
         self.qwebengine.load(QUrl(path))
 
 def route_plan(boundary, win:MainWindow):  # 默认给出四点边界
-    
-    mission_route = []
+    global mission_route
+    print('生成航线中···')
+    # mission_route = []
     dist = [9, 9, 9]
     dist[0] = ((boundary[0][0]-boundary[1][0])**2 + (boundary[0][1]-boundary[1][1])**2)**0.5  # 0.001是100m
     dist[1] = ((boundary[0][0]-boundary[2][0])**2 + (boundary[0][1]-boundary[2][1])**2)**0.5
@@ -88,11 +122,11 @@ def route_plan(boundary, win:MainWindow):  # 默认给出四点边界
         if(i != dist.index(min(dist)) + 1):
             group1.append(boundary[i])
     # dist.sort()
-    print(dist)
+    # print(dist)
     group0.sort(key=lambda x:x[0]**2+x[1]**2)
     group1.sort(key=lambda x:x[0]**2+x[1]**2)
-    print('group0 = ', group0)
-    print('group1 = ', group1)
+    # print('group0 = ', group0)
+    # print('group1 = ', group1)
     add_red_marker(Map, group0[0])
     add_red_marker(Map, group0[1])
     add_blue_marker(Map, group1[0])
@@ -104,11 +138,11 @@ def route_plan(boundary, win:MainWindow):  # 默认给出四点边界
         fill=True, # 是否填充
         weight=3, # 边界线宽
     ).add_to(Map)
-    Map.save("save_map.html")
+    # Map.save("save_map.html")
     dist0 = dis(group0[0], group0[1])
     dist1 = dis(group1[0], group1[1])
     n = int(min(dist0/0.0005, dist1/0.0005))
-    print('n = ', n)
+    # print('n = ', n)
     mod0 = dist0%0.0005
     mod1 = dist1%0.0005
     group0_now = [group0[0][0]+(group0[1][0]-group0[0][0])*mod0/(2*dist0), group0[0][1]+(group0[1][1]-group0[0][1])*mod0/(2*dist0)]
@@ -136,6 +170,7 @@ def route_plan(boundary, win:MainWindow):  # 默认给出四点边界
         mission_route.append(group1_now)
     else:
         mission_route.append(group0_now)
+    print('航线生成成功！')
     print('mission_route = ', mission_route)
     i = 1
     for point in mission_route:
@@ -157,16 +192,64 @@ def route_plan(boundary, win:MainWindow):  # 默认给出四点边界
         ).add_to(Map)
         i = i+1
     folium.PolyLine(locations=mission_route, popup=folium.Popup('预计航线', max_width=200), color='#14DCB4').add_to(Map)
-    Map.save("save_map.html")
 
 def dis(point0, point1):
     return ((point0[0]-point1[0])**2 + (point0[1]-point1[1])**2)**0.5
+
+def connect_plane(loop, drone):
+    print('连接飞机中···')
+    loop.run_until_complete(drone_connect(drone))
+
+async def drone_connect(drone):
+    await drone.connect(system_address="udp://:14540")
+    print('飞机连接成功！')
+
+def track_display(loop, drone):
+    print('开启航迹显示中···')
+    loop.run_until_complete(refresh_position(drone))
+
+def save(win:MainWindow):
+    global track
+    try: 
+        track = []
+        Map.save("save_map.html")
+        win.loadMap()
+    except:
+        print('地图刷新失败')
+
+async def refresh_position(drone):
+    global lat_deg, lon_deg, abs_alt, rel_alt, Map
+    Map.save("save_map.html")
+    i = 0
+    async for position in drone.telemetry.position():
+        # print(position)
+        i = i+1
+        lat_deg = round(position.latitude_deg, 7)
+        lon_deg = round(position.longitude_deg, 7)
+        abs_alt = round(position.absolute_altitude_m, 2)
+        rel_alt = round(position.relative_altitude_m, 2)
+        # print(lat_deg, lon_deg)
+        
+        if(i % 5 == 0):
+            track.append([lat_deg, lon_deg])
+            folium.PolyLine(locations=track, color='#DC143C', weight = 2).add_to(Map)
+    print('WARNING!  数据链断开!  WARNING!  数据链断开!  WARNING!  数据链断开!  ')
+
 
 if __name__ == '__main__':
     boundary = [[22.5909, 113.9757], [22.5909, 113.9750], [22.5899, 113.9757], [22.5899, 113.9750]]
     app = QApplication(sys.argv)
     win = MainWindow()
     win.show()
-    threading.Thread(target=route_plan, args=(boundary, win)).start()
+    drone = System()
+    loop = asyncio.get_event_loop()
+    connect_plane_thread = threading.Thread(target=connect_plane, args=(loop, drone))
+    connect_plane_thread.start()
+    connect_plane_thread.join()
+    route_plan_thread = threading.Thread(target=route_plan, args=(boundary, win))
+    route_plan_thread.start()
+    route_plan_thread.join()
+    track_display_thread = threading.Thread(target=track_display, args=(loop, drone))
+    track_display_thread.start()
     sys.exit(app.exec_())
 
