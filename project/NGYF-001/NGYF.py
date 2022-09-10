@@ -20,10 +20,51 @@ import folium
 from folium.features import DivIcon
 import asyncio
 from mavsdk import System
+from mavsdk.mission import *
 import nest_asyncio
 
 
 mission_route = []
+mission_Items = []
+land_mission_Items = [MissionItem(22.5912,
+                                                    113.9753,
+                                                    10,
+                                                    10,
+                                                    True,
+                                                    float('nan'),
+                                                    float('nan'),
+                                                    MissionItem.CameraAction.NONE,
+                                                    float('nan'),
+                                                    float('nan'),
+                                                    float('0.1'),
+                                                    float('nan'),
+                                                    float('nan')), 
+                                                    MissionItem(22.5909,
+                                                    113.9753,
+                                                    5,
+                                                    10,
+                                                    True,
+                                                    float('nan'),
+                                                    float('nan'),
+                                                    MissionItem.CameraAction.NONE,
+                                                    float('nan'),
+                                                    float('nan'),
+                                                    float('0.1'),
+                                                    float('nan'),
+                                                    float('nan')), 
+                                                    MissionItem(22.5905,
+                                                    113.9753,
+                                                    2,
+                                                    7,
+                                                    True,
+                                                    float('nan'),
+                                                    float('nan'),
+                                                    MissionItem.CameraAction.NONE,
+                                                    float('nan'),
+                                                    float('nan'),
+                                                    float('0.1'),
+                                                    float('nan'),
+                                                    float('nan'))]
 track = []
 
 
@@ -67,10 +108,11 @@ Map.save("save_map.html")
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, loop, drone):
         super(QMainWindow, self).__init__()
         self.setupUi(self)
-        
+        self.loop = loop
+        self.drone = drone
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -85,9 +127,15 @@ class MainWindow(QMainWindow):
         self.qwebengine.setGeometry(0, 0, 960, 930)
         self.loadMap()
 
-        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QtCore.QRect(0, 930, 260, 50))
-        self.pushButton.setObjectName("pushButton")
+        self.pushButton00 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton00.setGeometry(QtCore.QRect(0, 930, 260, 50))
+        self.pushButton00.setObjectName("pushButton00")
+        self.pushButton01 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton01.setGeometry(QtCore.QRect(260, 930, 260, 50))
+        self.pushButton01.setObjectName("pushButton01")
+        self.pushButton02 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton02.setGeometry(QtCore.QRect(520, 930, 260, 50))
+        self.pushButton02.setObjectName("pushButton02")
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -98,17 +146,21 @@ class MainWindow(QMainWindow):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        self.pushButton.setText("刷新地图")
+        self.pushButton00.setText("刷新地图")
+        self.pushButton01.setText("执行任务")
+        self.pushButton02.setText("降落")
 
-        self.pushButton.clicked.connect(lambda: save(self))
+        self.pushButton00.clicked.connect(lambda: save(self))
+        self.pushButton01.clicked.connect(lambda: mission_part(self.loop, self.drone, mission_Items))
+        self.pushButton02.clicked.connect(lambda:land_part(self.loop, self.drone))
     
     def loadMap(self):
         path = "file:\\/" + os.getcwd() + "\\save_map.html"
         path = path.replace('\\', '/')
         self.qwebengine.load(QUrl(path))
 
-def route_plan(boundary, win:MainWindow):  # 默认给出四点边界
-    global mission_route
+def route_plan(boundary):  # 默认给出四点边界
+    global mission_route, mission_Items
     print('生成航线中···')
     # mission_route = []
     dist = [9, 9, 9]
@@ -191,6 +243,19 @@ def route_plan(boundary, win:MainWindow):  # 默认给出四点边界
             )
         ).add_to(Map)
         i = i+1
+        mission_Items.append(MissionItem(point[0],
+                                                    point[1],
+                                                    20,
+                                                    10,
+                                                    True,
+                                                    float('nan'),
+                                                    float('nan'),
+                                                    MissionItem.CameraAction.NONE,
+                                                    float('nan'),
+                                                    float('nan'),
+                                                    float('0.1'),
+                                                    float('nan'),
+                                                    float('nan')))
     folium.PolyLine(locations=mission_route, popup=folium.Popup('预计航线', max_width=200), color='#14DCB4').add_to(Map)
 
 def dis(point0, point1):
@@ -233,20 +298,76 @@ async def refresh_position(drone):
         if(i % 5 == 0):
             track.append([lat_deg, lon_deg])
             folium.PolyLine(locations=track, color='#DC143C', weight = 2).add_to(Map)
-    print('WARNING!  数据链断开!  WARNING!  数据链断开!  WARNING!  数据链断开!  ')
+    print('错误!  数据链断开!  错误!  数据链断开!  错误!  数据链断开!  ')
 
+
+def land_part(loop, drone):
+    threading.Thread(target=land, args=(loop, drone, land_mission_Items)).start()
+
+def land(loop, drone, land_mission_items):
+    loop.run_until_complete(land_drone(drone, land_mission_items))
+
+async def land_drone(drone:System, land_mission_items):
+    print('--开始降落')
+    await mission_drone(drone, land_mission_items)
+    print('--准备着陆')
+    await drone.action.land()
+    print('--降落成功')
+
+def mission_part(loop, drone, mission_items):
+    threading.Thread(target=mission, args=(loop, drone, mission_items)).start()
+
+def mission(loop, drone, mission_items):
+    loop.run_until_complete(mission_drone(drone, mission_items))
+
+async def mission_drone(drone, mission_items):
+    termination_task = asyncio.ensure_future(
+        observe_is_in_air(drone))
+
+    mission_plan = MissionPlan(mission_items)
+
+    await drone.mission.set_return_to_launch_after_mission(False)
+
+    print("-- Uploading mission")
+    await drone.mission.upload_mission(mission_plan)
+
+    print("-- Starting mission")
+    await drone.mission.start_mission()
+
+    await termination_task
+
+async def observe_is_in_air(drone):
+    """ Monitors whether the drone is flying or not and
+    returns after landing """
+
+    was_in_air = False
+    was_mission_finished = False
+    is_mission_finished = False
+
+    async for mission_progress in drone.mission.mission_progress():
+        print(f"Mission progress: "
+            f"{mission_progress.current}/"
+            f"{mission_progress.total}")
+
+        if mission_progress.current == mission_progress.total:
+            print("is_mission_finished = True")
+            is_mission_finished = True
+
+        if not was_mission_finished and is_mission_finished:
+            await asyncio.get_event_loop().shutdown_asyncgens()
+            return
 
 if __name__ == '__main__':
     boundary = [[22.5909, 113.9757], [22.5909, 113.9750], [22.5899, 113.9757], [22.5899, 113.9750]]
-    app = QApplication(sys.argv)
-    win = MainWindow()
-    win.show()
-    drone = System()
     loop = asyncio.get_event_loop()
+    drone = System()
+    app = QApplication(sys.argv)
+    win = MainWindow(loop, drone)
+    win.show()
     connect_plane_thread = threading.Thread(target=connect_plane, args=(loop, drone))
     connect_plane_thread.start()
     connect_plane_thread.join()
-    route_plan_thread = threading.Thread(target=route_plan, args=(boundary, win))
+    route_plan_thread = threading.Thread(target=route_plan, args=(boundary, ))
     route_plan_thread.start()
     route_plan_thread.join()
     track_display_thread = threading.Thread(target=track_display, args=(loop, drone))
