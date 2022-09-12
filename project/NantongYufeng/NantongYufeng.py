@@ -534,10 +534,11 @@ class Ui_MainWindow(QMainWindow):
                 fill=True,
                 fill_color='#6495E'  # 填充颜色
             ).add_to(Map)
-            if(i%10 == 0):
-                Map.save("sources/save_map.html")
-                path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
-                path = path.replace('\\', '/')
+            Map.save("sources/save_map.html")
+            # if(i%10 == 0):
+            #     Map.save("sources/save_map.html")
+            #     path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
+            #     path = path.replace('\\', '/')
                 # self.qwebengine.load(QUrl(path))
                 # print('refresh map')
 
@@ -769,9 +770,9 @@ class Ui_MainWindow(QMainWindow):
 
     async def drop_bomb_drone(self):
         global drone
-        await drone.action.set_actuator(1, -0.9)
-        await asyncio.sleep(2)
         await drone.action.set_actuator(1, 0.9)
+        await asyncio.sleep(2)
+        await drone.action.set_actuator(1, -0.9)
 
     def open_camshift(self):
         global camshift_status

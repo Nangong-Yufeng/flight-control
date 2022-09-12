@@ -24,6 +24,7 @@ from mavsdk.mission import *
 import nest_asyncio
 
 
+init_mavsdk_server = r'"sources\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe -p 50051 serial://COM3:57600"' # 你要运行的exe文件
 mission_route = []
 mission_Items = []
 land_mission_Items = [MissionItem(22.5912,
@@ -93,10 +94,10 @@ def add_blue_marker(Map, location):
     return Map
 
 # 调用高德地图http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}
-Map = folium.Map(location=[22.590719999999997, 113.97554149999999],
+Map = folium.Map(location=[22.5904, 113.9754],
                  max_zoom=19, 
-                 zoom_start=18,
-                 crs="EPSG3857", 
+                 zoom_start=19,
+                 crs="EPSG3857",
                  control_scale=True,
                  tiles = 'OpenStreetMap',  # 使用OpenStreetMap
                  attr='default')
@@ -155,7 +156,7 @@ class MainWindow(QMainWindow):
         self.pushButton02.clicked.connect(lambda:land_part(self.loop, self.drone))
     
     def loadMap(self):
-        path = "file:\\/" + os.getcwd() + "\\save_map.html"
+        path = "file:\\" + os.getcwd() + "\\save_map.html"
         path = path.replace('\\', '/')
         self.qwebengine.load(QUrl(path))
 
@@ -222,6 +223,7 @@ def route_plan(boundary):  # 默认给出四点边界
         mission_route.append(group1_now)
     else:
         mission_route.append(group0_now)
+    mission_route.append([22.5904, 113.9754])
     print('航线生成成功！')
     print('mission_route = ', mission_route)
     i = 1
@@ -244,29 +246,37 @@ def route_plan(boundary):  # 默认给出四点边界
         ).add_to(Map)
         i = i+1
         mission_Items.append(MissionItem(point[0],
-                                                    point[1],
-                                                    20,
-                                                    10,
-                                                    True,
-                                                    float('nan'),
-                                                    float('nan'),
-                                                    MissionItem.CameraAction.NONE,
-                                                    float('nan'),
-                                                    float('nan'),
-                                                    float('0.1'),
-                                                    float('nan'),
-                                                    float('nan')))
+                                        point[1],
+                                        20,
+                                        10,
+                                        True,
+                                        float('nan'),
+                                        float('nan'),
+                                        MissionItem.CameraAction.NONE,
+                                        float('nan'),
+                                        float('nan'),
+                                        float('0.1'),
+                                        float('nan'),
+                                        float('nan')))
     folium.PolyLine(locations=mission_route, popup=folium.Popup('预计航线', max_width=200), color='#14DCB4').add_to(Map)
 
 def dis(point0, point1):
     return ((point0[0]-point1[0])**2 + (point0[1]-point1[1])**2)**0.5
+
+def open_mavsdk_server():
+        server = os.system(init_mavsdk_server)
+        print (server)
+        while True:
+            print('02')
+
 
 def connect_plane(loop, drone):
     print('连接飞机中···')
     loop.run_until_complete(drone_connect(drone))
 
 async def drone_connect(drone):
-    await drone.connect(system_address="udp://:14540")
+    # await drone.connect(system_address="udp://:14540")
+    await drone.connect()
     print('飞机连接成功！')
 
 def track_display(loop, drone):
@@ -360,16 +370,17 @@ async def observe_is_in_air(drone):
 if __name__ == '__main__':
     boundary = [[22.5909, 113.9757], [22.5909, 113.9750], [22.5899, 113.9757], [22.5899, 113.9750]]
     loop = asyncio.get_event_loop()
-    drone = System()
+    drone = System(mavsdk_server_address='localhost', port=50051)
     app = QApplication(sys.argv)
     win = MainWindow(loop, drone)
     win.show()
+    mavsdk_thread = threading.Thread(target=open_mavsdk_server).start()
     connect_plane_thread = threading.Thread(target=connect_plane, args=(loop, drone))
     connect_plane_thread.start()
-    connect_plane_thread.join()
+    # connect_plane_thread.join()
     route_plan_thread = threading.Thread(target=route_plan, args=(boundary, ))
     route_plan_thread.start()
-    route_plan_thread.join()
+    # route_plan_thread.join()
     track_display_thread = threading.Thread(target=track_display, args=(loop, drone))
     track_display_thread.start()
     sys.exit(app.exec_())
