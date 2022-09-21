@@ -10,8 +10,8 @@ import torch
 import torch.backends.cudnn as cudnn
 import time
 import threading
-import win32clipboard as wc
-import win32con
+# import win32clipboard as wc
+# import win32con
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams
 from utils.general import check_img_size, check_suffix, non_max_suppression, scale_coords, xyxy2xywh
@@ -24,7 +24,7 @@ device = select_device('')
 # device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 half = True
 # half = device.type != 'cpu'
-weights = 'best.pt'
+weights = 'Flying.pt'
 #模型尺寸
 imgsz = 640
 
@@ -94,9 +94,9 @@ term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )  # 设置
 
 def bomb_func():
     aString = 'bomb'
-    wc.OpenClipboard()
-    wc.EmptyClipboard()
-    wc.SetClipboardData(win32con.CF_TEXT, aString.encode('GBK')) # 解决中文乱码
+    # wc.OpenClipboard()
+    # wc.EmptyClipboard()
+    # wc.SetClipboardData(win32con.CF_TEXT, aString.encode('GBK')) # 解决中文乱码
     # wc.CloseClipboard()
 
 
