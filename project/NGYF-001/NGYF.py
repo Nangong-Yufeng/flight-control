@@ -74,7 +74,7 @@ lon_deg = -1.0
 abs_alt = -1.0
 rel_alt = -1.0
 land_alt = -1.0
-threshold = 0.00012  # 阈值10m
+threshold = 0.00010  # 阈值10m
 
 
 nest_asyncio.apply()
@@ -313,7 +313,7 @@ async def refresh_position(drone):
         # print(lat_deg, lon_deg)
         if(i == 1):
             land_alt = abs_alt - rel_alt
-        if(i % 5 == 0):
+        if(i % 2 == 0):
             track.append([lat_deg, lon_deg])
             folium.PolyLine(locations=track, color='#DC143C', weight = 2).add_to(Map)
     print('错误!  数据链断开!  错误!  数据链断开!  错误!  数据链断开!  ')
@@ -386,11 +386,11 @@ async def waiting_to_waypoint(drone:System, waypoint, total_dist, i, total):
             print("\r", end="")
             print("导航点({}/{})进度: {}%: ".format(i, total, now_process), "▋" * (now_process // 2), end="")
             sys.stdout.flush()
-        if(now_dist) < threshold:  # 飞机位置与目标点距离小于threshold米
+        if((now_dist) < threshold) or (now_process>90 and now_process<last_process):  # 飞机位置与目标点距离小于threshold米, 或飞过目标点
             print('--到达目标点 (', i, '/', total, ')')
             return
         last_process = now_process
-        if(refresh_i % 5 == 0):
+        if(refresh_i % 2 == 0):
             track.append([lat_deg, lon_deg])
             folium.PolyLine(locations=track, color='#DC143C', weight = 2).add_to(Map)
 
