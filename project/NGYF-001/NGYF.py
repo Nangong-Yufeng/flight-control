@@ -27,46 +27,54 @@ import nest_asyncio
 init_mavsdk_server = r'"sources\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe -p 50051 serial://COM3:57600"' # 你要运行的exe文件
 mission_route = []
 mission_Items = []
-land_mission_Items = [MissionItem(22.5912,
-                                                    113.9753,
-                                                    10,
-                                                    10,
-                                                    True,
-                                                    float('nan'),
-                                                    float('nan'),
-                                                    MissionItem.CameraAction.NONE,
-                                                    float('nan'),
-                                                    float('nan'),
-                                                    float('0.1'),
-                                                    float('nan'),
-                                                    float('nan')), 
-                                                    MissionItem(22.5909,
-                                                    113.9753,
-                                                    5,
-                                                    10,
-                                                    True,
-                                                    float('nan'),
-                                                    float('nan'),
-                                                    MissionItem.CameraAction.NONE,
-                                                    float('nan'),
-                                                    float('nan'),
-                                                    float('0.1'),
-                                                    float('nan'),
-                                                    float('nan')), 
-                                                    MissionItem(22.5905,
-                                                    113.9753,
-                                                    2,
-                                                    7,
-                                                    True,
-                                                    float('nan'),
-                                                    float('nan'),
-                                                    MissionItem.CameraAction.NONE,
-                                                    float('nan'),
-                                                    float('nan'),
-                                                    float('0.1'),
-                                                    float('nan'),
-                                                    float('nan'))]
+# land_mission_Items = [MissionItem(22.5912,
+#                                                     113.9753,
+#                                                     10,
+#                                                     10,
+#                                                     True,
+#                                                     float('nan'),
+#                                                     float('nan'),
+#                                                     MissionItem.CameraAction.NONE,
+#                                                     float('nan'),
+#                                                     float('nan'),
+#                                                     float('0.1'),
+#                                                     float('nan'),
+#                                                     float('nan')), 
+#                                                     MissionItem(22.5909,
+#                                                     113.9753,
+#                                                     5,
+#                                                     10,
+#                                                     True,
+#                                                     float('nan'),
+#                                                     float('nan'),
+#                                                     MissionItem.CameraAction.NONE,
+#                                                     float('nan'),
+#                                                     float('nan'),
+#                                                     float('0.1'),
+#                                                     float('nan'),
+#                                                     float('nan')), 
+#                                                     MissionItem(22.5905,
+#                                                     113.9753,
+#                                                     2,
+#                                                     7,
+#                                                     True,
+#                                                     float('nan'),
+#                                                     float('nan'),
+#                                                     MissionItem.CameraAction.NONE,
+#                                                     float('nan'),
+#                                                     float('nan'),
+#                                                     float('0.1'),
+#                                                     float('nan'),
+#                                                     float('nan'))]
+land_mission_Items = [[22.5912,113.9753,10,10], [22.5909, 113.9753, 5, 10], [22.5905, 113.9753, 2,7]]
+goto_test_item = [22.5909, 113.9751, 40]
 track = []
+lat_deg = -1.0
+lon_deg = -1.0
+abs_alt = -1.0
+rel_alt = -1.0
+land_alt = -1.0
+threshold = 0.00012  # 阈值10m
 
 
 nest_asyncio.apply()
@@ -245,19 +253,20 @@ def route_plan(boundary):  # 默认给出四点边界
             )
         ).add_to(Map)
         i = i+1
-        mission_Items.append(MissionItem(point[0],
-                                        point[1],
-                                        20,
-                                        10,
-                                        True,
-                                        float('nan'),
-                                        float('nan'),
-                                        MissionItem.CameraAction.NONE,
-                                        float('nan'),
-                                        float('nan'),
-                                        float('0.1'),
-                                        float('nan'),
-                                        float('nan')))
+        # mission_Items.append(MissionItem(point[0],
+        #                                 point[1],
+        #                                 20,
+        #                                 10,
+        #                                 True,
+        #                                 float('nan'),
+        #                                 float('nan'),
+        #                                 MissionItem.CameraAction.NONE,
+        #                                 float('nan'),
+        #                                 float('nan'),
+        #                                 float('0.1'),
+        #                                 float('nan'),
+        #                                 float('nan')))
+        mission_Items.append([point[0], point[1], 20, 10])
     folium.PolyLine(locations=mission_route, popup=folium.Popup('预计航线', max_width=200), color='#14DCB4').add_to(Map)
 
 def dis(point0, point1):
@@ -266,8 +275,6 @@ def dis(point0, point1):
 def open_mavsdk_server():
         server = os.system(init_mavsdk_server)
         print (server)
-        while True:
-            print('02')
 
 
 def connect_plane(loop, drone):
@@ -293,7 +300,7 @@ def save(win:MainWindow):
         print('地图刷新失败')
 
 async def refresh_position(drone):
-    global lat_deg, lon_deg, abs_alt, rel_alt, Map
+    global lat_deg, lon_deg, abs_alt, rel_alt, land_alt, Map
     Map.save("save_map.html")
     i = 0
     async for position in drone.telemetry.position():
@@ -304,7 +311,8 @@ async def refresh_position(drone):
         abs_alt = round(position.absolute_altitude_m, 2)
         rel_alt = round(position.relative_altitude_m, 2)
         # print(lat_deg, lon_deg)
-        
+        if(i == 1):
+            land_alt = abs_alt - rel_alt
         if(i % 5 == 0):
             track.append([lat_deg, lon_deg])
             folium.PolyLine(locations=track, color='#DC143C', weight = 2).add_to(Map)
@@ -319,7 +327,7 @@ def land(loop, drone, land_mission_items):
 
 async def land_drone(drone:System, land_mission_items):
     print('--开始降落')
-    await mission_drone(drone, land_mission_items)
+    await my_mission_drone(drone, land_mission_items)
     print('--准备着陆')
     await drone.action.land()
     print('--降落成功')
@@ -328,44 +336,108 @@ def mission_part(loop, drone, mission_items):
     threading.Thread(target=mission, args=(loop, drone, mission_items)).start()
 
 def mission(loop, drone, mission_items):
-    loop.run_until_complete(mission_drone(drone, mission_items))
+    loop.run_until_complete(my_mission_drone(drone, mission_items))
 
-async def mission_drone(drone, mission_items):
-    termination_task = asyncio.ensure_future(
-        observe_is_in_air(drone))
+async def my_mission_drone(drone:System, mission_items):
+    # mission_item[0]: lat_deg
+    # mission_item[1]: lon_deg
+    # mission_item[2]: rel_alt
+    # mission_item[3]: speed
+    print('设置参数为1m')
+    await drone.param.set_param_float('NAV_LOITER_RAD', 1)
+    print('参数设置成功')
+    print('正在读取飞机当前高度')
+    plane_abs_alt = await get_abs_alt(drone)
+    print('高度读取成功，当前高度', plane_abs_alt, '米')
+    i = 0
+    total = len(mission_items)
+    for mission_item in mission_items:
+        i = i+1
+        print('--开始导航到目标点 (', i, '/', total, ')')
+        now_position = await get_position(drone)
+        total_dist = dis([now_position.latitude_deg, now_position.longitude_deg], [mission_item[0], mission_item[1]])
+        await drone.param.set_param_float('FW_AIRSPD_TRIM', mission_item[3])
+        await drone.action.goto_location(mission_item[0], mission_item[1], land_alt + mission_item[2], 0)
+        
+        print('--导航中 (', i, '/', total, ')')    
+        await waiting_to_waypoint(drone, mission_item, total_dist, i, total)
+    print('导航结束！')
+    print('设置参数为默认')
+    await drone.param.set_param_float('NAV_LOITER_RAD', 25)
+    print('参数设置成功')
+    track_display_thread = threading.Thread(target=track_display, args=(loop, drone))
+    track_display_thread.start()
 
-    mission_plan = MissionPlan(mission_items)
+async def waiting_to_waypoint(drone:System, waypoint, total_dist, i, total):
+    global lat_deg, lon_deg, abs_alt, rel_alt, Map
+    last_process = 0
+    refresh_i = 0
+    async for position in drone.telemetry.position():
+        refresh_i = refresh_i + 1
+        lat_deg = round(position.latitude_deg, 7)
+        lon_deg = round(position.longitude_deg, 7)
+        abs_alt = round(position.absolute_altitude_m, 2)
+        rel_alt = round(position.relative_altitude_m, 2)
 
-    await drone.mission.set_return_to_launch_after_mission(False)
-
-    print("-- Uploading mission")
-    await drone.mission.upload_mission(mission_plan)
-
-    print("-- Starting mission")
-    await drone.mission.start_mission()
-
-    await termination_task
-
-async def observe_is_in_air(drone):
-    """ Monitors whether the drone is flying or not and
-    returns after landing """
-
-    was_in_air = False
-    was_mission_finished = False
-    is_mission_finished = False
-
-    async for mission_progress in drone.mission.mission_progress():
-        print(f"Mission progress: "
-            f"{mission_progress.current}/"
-            f"{mission_progress.total}")
-
-        if mission_progress.current == mission_progress.total:
-            print("is_mission_finished = True")
-            is_mission_finished = True
-
-        if not was_mission_finished and is_mission_finished:
-            await asyncio.get_event_loop().shutdown_asyncgens()
+        now_dist = dis([lat_deg, lon_deg], [waypoint[0], waypoint[1]])
+        now_process = round((total_dist - now_dist + threshold) / total_dist * 100)
+        if(last_process != now_process):
+            # print('--当前进度', now_process, '%')
+            print("\r", end="")
+            print("导航点({}/{})进度: {}%: ".format(i, total, now_process), "▋" * (now_process // 2), end="")
+            sys.stdout.flush()
+        if(now_dist) < threshold:  # 飞机位置与目标点距离小于threshold米
+            print('--到达目标点 (', i, '/', total, ')')
             return
+        last_process = now_process
+        if(refresh_i % 5 == 0):
+            track.append([lat_deg, lon_deg])
+            folium.PolyLine(locations=track, color='#DC143C', weight = 2).add_to(Map)
+
+async def get_abs_alt(drone:System):
+    async for position in drone.telemetry.position():
+        return position.absolute_altitude_m
+
+async def get_position(drone:System):
+    async for position in drone.telemetry.position():
+        return position
+
+# async def mission_drone(drone, mission_items):
+#     termination_task = asyncio.ensure_future(
+#         observe_is_in_air(drone))
+
+#     mission_plan = MissionPlan(mission_items)
+
+#     await drone.mission.set_return_to_launch_after_mission(False)
+
+#     print("-- Uploading mission")
+#     await drone.mission.upload_mission(mission_plan)
+
+#     print("-- Starting mission")
+#     await drone.mission.start_mission()
+
+#     await termination_task
+
+# async def observe_is_in_air(drone):
+#     """ Monitors whether the drone is flying or not and
+#     returns after landing """
+
+#     was_in_air = False
+#     was_mission_finished = False
+#     is_mission_finished = False
+
+#     async for mission_progress in drone.mission.mission_progress():
+#         print(f"Mission progress: "
+#             f"{mission_progress.current}/"
+#             f"{mission_progress.total}")
+
+#         if mission_progress.current == mission_progress.total:
+#             print("is_mission_finished = True")
+#             is_mission_finished = True
+
+#         if not was_mission_finished and is_mission_finished:
+#             await asyncio.get_event_loop().shutdown_asyncgens()
+#             return
 
 if __name__ == '__main__':
     boundary = [[22.5909, 113.9757], [22.5909, 113.9750], [22.5899, 113.9757], [22.5899, 113.9750]]
@@ -377,10 +449,10 @@ if __name__ == '__main__':
     mavsdk_thread = threading.Thread(target=open_mavsdk_server).start()
     connect_plane_thread = threading.Thread(target=connect_plane, args=(loop, drone))
     connect_plane_thread.start()
-    # connect_plane_thread.join()
+    connect_plane_thread.join()
     route_plan_thread = threading.Thread(target=route_plan, args=(boundary, ))
     route_plan_thread.start()
-    # route_plan_thread.join()
+    route_plan_thread.join()
     track_display_thread = threading.Thread(target=track_display, args=(loop, drone))
     track_display_thread.start()
     sys.exit(app.exec_())
