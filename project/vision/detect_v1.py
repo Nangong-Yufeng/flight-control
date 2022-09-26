@@ -24,7 +24,7 @@ device = select_device('')
 # device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 half = True
 # half = device.type != 'cpu'
-weights = 'Flying.pt'
+weights = 'best.pt'
 #模型尺寸
 imgsz = 640
 
@@ -63,6 +63,7 @@ names = model.module.names if hasattr(model, 'module') else model.names  # get c
 
 model.half()
 imgsz = check_img_size(imgsz, s=stride)
+print('imgsz = ', imgsz)
 model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters()))) 
 
 
@@ -114,6 +115,7 @@ def startdetect():
         # print("img = ", img)
         # print("======================================================")
         # print("im0s = ", im0s)
+        # print('img shape = ', img.shape)
         t0 = time.time()
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -130,6 +132,7 @@ def startdetect():
             s = ''
             s += '%gx%g ' % img.shape[2:]
             img0 = im0s[i].copy()
+            # print('01 img0 shape = ', img0.shape)
             frame = im0s[i].copy()
             # print("img0 = ", img0)
             annotator = Annotator(img0, line_width=line_thickness, example=str(names))
@@ -140,6 +143,7 @@ def startdetect():
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], img0.shape).round()
                 # Print results
                 for *xyxy, conf, cls in reversed(det):
+                    print('02 img0 shape = ', img0.shape)
                     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) ).view(-1).tolist()
                     cls = int(cls)
                     label = None if hide_labels else (names[cls] if hide_conf else f'{names[cls]} {conf:.2f}')

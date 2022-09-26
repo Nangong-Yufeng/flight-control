@@ -26,9 +26,9 @@ import nest_asyncio
 
 init_mavsdk_server = r'"sources\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe -p 50051 serial://COM3:57600"' # 你要运行的exe文件
 mission_route = []
-mission_Items = []
+mission_Items = [[22.5904, 113.9754, 80, 13]]
 # land_mission_Items = [MissionItem(22.5912,
-#                                                     113.9753,
+#                                                    113.9753,
 #                                                     10,
 #                                                     10,
 #                                                     True,
@@ -253,20 +253,8 @@ def route_plan(boundary):  # 默认给出四点边界
             )
         ).add_to(Map)
         i = i+1
-        # mission_Items.append(MissionItem(point[0],
-        #                                 point[1],
-        #                                 20,
-        #                                 10,
-        #                                 True,
-        #                                 float('nan'),
-        #                                 float('nan'),
-        #                                 MissionItem.CameraAction.NONE,
-        #                                 float('nan'),
-        #                                 float('nan'),
-        #                                 float('0.1'),
-        #                                 float('nan'),
-        #                                 float('nan')))
-        mission_Items.append([point[0], point[1], 20, 10])
+        # mission_Items.append([point[0], point[1], 20, 10])
+    print('任务生成成功! ', mission_Items)
     folium.PolyLine(locations=mission_route, popup=folium.Popup('预计航线', max_width=200), color='#14DCB4').add_to(Map)
 
 def dis(point0, point1):
