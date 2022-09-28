@@ -37,7 +37,7 @@ def cv_filter2d(img_path):
     cv2.destroyAllWindows()
 
 #read the image
-img = cv2.imread("img/test.png")
+img = cv2.imread("img/18img.png")
 #convert the BGR image to HSV colour space
 hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 #obtain the grayscale image of the original image
@@ -76,7 +76,7 @@ for cnt in contours:
             # cv2.imshow('img', img)
             # cv2.waitKey()
             theta = cv2.minAreaRect(cnt)[2]
-            # print('thete = ', theta)
+            print('thete = ', theta)
             # if abs(theta) <= 45:
             #     print('图片的旋转角度为%s.'%theta)
             angle = theta
@@ -96,6 +96,8 @@ mask_rotated = cv2.warpAffine(mask, M, (w, h), flags=cv2.INTER_CUBIC, borderMode
 rotated = cv2.warpAffine(img, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
 # cv2.imwrite('after_rotated.png', rotated)
 # print(int(center[1]-long/2), int(center[1]+long/2), int(center[0]-short/2), int(center[0]+short/2))
+cv2.imshow('rotated', rotated)
+cv2.waitKey()
 cutted_rgb_img = rotated[positiveNum(int(center[1]-long/2)):positiveNum(int(center[1]+long/2)), positiveNum(int(center[0]-short/2)):positiveNum(int(center[0]+short/2))]
 cutted_mask = mask_rotated[positiveNum(int(center[1]-long/2)):positiveNum(int(center[1]+long/2)), positiveNum(int(center[0]-short/2)):positiveNum(int(center[0]+short/2))]
 dilate=cv2.dilate(cutted_mask, None, iterations=1)
@@ -107,12 +109,19 @@ kernel = np.array([[0, -1, 0],
                     [0, -1, 0]])
 
 sharped_number_rgb = cv2.filter2D(number_rgb_img, -1, kernel)
+bin_number_img = cv2.adaptiveThreshold(cv2.cvtColor(sharped_number_rgb, cv2.COLOR_BGR2GRAY), 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 5)
 
+
+# final_img = np.hstack((number_rgb_img, sharped_number_rgb, bin_number_img))
+# cv2.imwrite('out/final_img.png', final_img)
 cv2.imwrite('out/cutted_rgb_img.png', cutted_rgb_img)
 cv2.imwrite('out/number_rgb_img.png', number_rgb_img)
 cv2.imwrite('out/sharped_number_rgb.png', sharped_number_rgb)
+cv2.imwrite('out/bin_number_img.png', bin_number_img)
 cv2.imshow('cutted_rgb_img', cutted_rgb_img)
 cv2.imshow('number_rgb_img.png', number_rgb_img)
 cv2.imshow('sharped_number_rgb.png', sharped_number_rgb)
+cv2.imshow('fbin_number_img.png', bin_number_img)
+# cv2.imshow('final_img.png', final_img)
 cv2.waitKey()
 

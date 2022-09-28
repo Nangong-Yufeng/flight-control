@@ -307,7 +307,9 @@ class LoadStreams:
             cap = cv2.VideoCapture(s)
             assert cap.isOpened(), f'Failed to open {s}'
             w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            # print('w = ', w)
             h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            # print('h = ', h)
             self.fps[i] = max(cap.get(cv2.CAP_PROP_FPS) % 100, 0) or 30.0  # 30 FPS fallback
             self.frames[i] = max(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), 0) or float('inf')  # infinite stream fallback
 
@@ -352,8 +354,9 @@ class LoadStreams:
 
         # Letterbox
         img0 = self.imgs.copy()
+        # print('img0[0] shape = ', img0[0].shape)
         img = [letterbox(x, self.img_size, stride=self.stride, auto=self.rect and self.auto)[0] for x in img0]
-
+        # print('img[0] shape = ', img[0].shape)
         # Stack
         img = np.stack(img, 0)
 

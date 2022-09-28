@@ -26,6 +26,7 @@ cap = cv2.VideoCapture(0)  # 摄像头输入
 # frame读取到的当前帧的矩阵
 # 返回的是元组类型，所以也可以加括号
 ret,frame = cap.read()
+print(frame.shape)
 cv2.namedWindow('imshow')
 cv2.setMouseCallback('imshow',onMouse)
 term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )  # 设置迭代的终止标准，最多十次迭代

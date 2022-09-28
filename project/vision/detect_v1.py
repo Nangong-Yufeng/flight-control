@@ -1,3 +1,4 @@
+from ast import arg
 from calendar import c
 from pathlib import Path
 from re import T
@@ -17,8 +18,9 @@ from utils.datasets import LoadStreams
 from utils.general import check_img_size, check_suffix, non_max_suppression, scale_coords, xyxy2xywh
 from utils.plots import Annotator
 from utils.torch_utils import select_device
+from utils.img_process import identify, positiveNum
 
-
+i = 0
 #@torch.no_grad()
 device = select_device('')
 # device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
@@ -100,6 +102,15 @@ def bomb_func():
     # wc.SetClipboardData(win32con.CF_TEXT, aString.encode('GBK')) # 解决中文乱码
     # wc.CloseClipboard()
 
+def cap_target(frame, img_object):
+    global i
+    # print('frame shape = ', frame.shape)
+    img = frame[positiveNum(int(img_object[1]-img_object[3]/2)):positiveNum(int(img_object[1]+img_object[3]/2)), positiveNum(int(img_object[0]-img_object[2]/2)):positiveNum(int(img_object[0]+img_object[2]/2))]
+    # print('cut frame = ', positiveNum(int(img_object[0]-img_object[2]/2)), positiveNum(int(img_object[0]+img_object[2]/2)), positiveNum(int(img_object[1]-img_object[3]/2)), positiveNum(int(img_object[1]+img_object[3]/2)))
+    # print(img_object)
+    cv2.imwrite('out/'+str(i)+'img.png', img)
+    i = i+1
+    identify(img, i)
 
 def startdetect():
     global trackObject
@@ -143,14 +154,15 @@ def startdetect():
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], img0.shape).round()
                 # Print results
                 for *xyxy, conf, cls in reversed(det):
-                    print('02 img0 shape = ', img0.shape)
+                    # print('02 img0 shape = ', img0.shape)
                     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) ).view(-1).tolist()
                     cls = int(cls)
-                    label = None if hide_labels else (names[cls] if hide_conf else f'{names[cls]} {conf:.2f}')
-                    img_object.append(xywh)
-                    cls_object.append(names[cls])
-                    if show_default_results:
-                        annotator.box_label(xyxy, label=label, color=(255, 182, 193))#目标框
+                    if(conf > 0.8):
+                        label = None if hide_labels else (names[cls] if hide_conf else f'{names[cls]} {conf:.2f}')
+                        img_object.append(xywh)
+                        cls_object.append(names[cls])
+                        # if show_default_results:
+                        #     annotator.box_label(xyxy, label=label, color=(255, 182, 193))#目标框
                 # print(cls_object)
                 disttotal = []
                 flag = False
@@ -159,43 +171,20 @@ def startdetect():
                 if ((len(img_object) > 0) & ('red' in cls_object)):  # 如果检测到目标
                     # print(cls_object[0],img_object[0][0], img_object[0][1], img_object[0][2], img_object[0][3])bomb
                     for i in range(len(img_object)):
-                        distx = fabs(img_object[i][0]-pos_x)
-                        disty = fabs(img_object[i][1]-pos_y)
-                        if (distx**2 + disty**2) <= 625:  # 如果目标在以中心为圆心，25像素为半径的圆
-                            # count = i
-                            flag = True
-                            print("Bomb YoloV5", end=': ')
-                            print(cls_object[i],img_object[i][0], img_object[i][1], img_object[i][2], img_object[i][3])
-                            bombthread_yolo.start()
-                            bombthread_yolo.join()
-                            break
-                    # xywh = img_object[count]
-                
-                # if('q' in cls_object & flag): 
-                #     if(img)
-                    # distvalue = (float(img_object[0][0]) - pos_x) ** 2 + (float(img_object[0][1]) - pos_y) ** 2
-                    # for i in range(len(img_object)):
-                    #     dist = (img_object[i][0] - pos_x) ** 2 + (img_object[i][1] - pos_y) ** 2
-                    #     disttotal.append(dist)
-                    #     if dist < distvalue:
-                    #         distvalue = dist
-                    #         count = i
-                # xywh = img_object[count]
-                
-
-            # if show_default_results:
-            #     im0 = annotator.result()
+                        if(cls_object[i]=='red'):
+                            distx = fabs(img_object[i][0]-pos_x)
+                            disty = fabs(img_object[i][1]-pos_y)
+                            if (distx**2 + disty**2) <= 625:  # 如果目标在以中心为圆心，25像素为半径的圆, 就投弹
+                                # count = i
+                                flag = True
+                                print("Bomb YoloV5", end=': ')
+                                print(cls_object[i],img_object[i][0], img_object[i][1], img_object[i][2], img_object[i][3])
+                                bombthread_yolo.start()
+                                bombthread_yolo.join()
+                                break
+                            threading.Thread(target=cap_target, args=(img0, img_object[i])).start()
             if show_default_results:
                 frame = annotator.result()
-
-            # if show_default_results:  # 窗口的fps可用于评估性能
-            #     im0 = annotator.result()
-            #     fps = 1/(t1-t0)
-            #     cv2.putText(im0,':{0}'.format(float('%.1f'%fps)),(0,50),cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            #     cv2.circle(im0, (pos_x, pos_y), 25, (255, 0, 0), 2)
-
-            # if show_default_results:
-            #     cv2.imshow('RANX_AI', im0)
 
             # Camshift Part
             if trackObject != 0:
