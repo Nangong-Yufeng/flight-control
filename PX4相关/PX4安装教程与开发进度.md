@@ -9,7 +9,11 @@
 - 强烈建议不要用20.04，不然你就会像我一样大晚上的还在整这玩意。
 - 提到“要用bash运行命令”的，如果你不知道bash是什么，那你用的就是bash。
 
-### ROS及PX4环境搭建
+### ROS及PX4环境搭建  
+0. 发现一个很好用的东西叫[fishros](https://fishros.org.cn/forum/topic/20/%E5%B0%8F%E9%B1%BC%E7%9A%84%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E7%B3%BB%E5%88%97?lang=zh-CN)，无脑安装ros，bash中输入下面命令即可，可以跳过很多步骤。  
+    ```sh
+    wget http://fishros.com/install -O fishros && . fishros
+    ```
 1. 加入ROS安装源
     ```sh
     sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
