@@ -21,6 +21,7 @@ from folium.features import DivIcon
 import asyncio
 from mavsdk import System
 from mavsdk.mission import *
+from utils.droneControl import my_mission, plan_route
 import nest_asyncio
 
 
@@ -159,7 +160,7 @@ class MainWindow(QMainWindow):
         self.pushButton02.setText("降落")
 
         self.pushButton00.clicked.connect(lambda: save(self))
-        self.pushButton01.clicked.connect(lambda: mission_part(self.loop, self.drone, mission_Items))
+        self.pushButton01.clicked.connect(lambda: mission_part(self.loop, self.drone, mission_Items, threshold))
         self.pushButton02.clicked.connect(lambda:land_part(self.loop, self.drone))
     
     def loadMap(self):
@@ -291,22 +292,28 @@ def save(win:MainWindow):
     except:
         print('地图刷新失败')
 
-async def refresh_position(drone):
+async def refresh_position(drone:System):
     global lat_deg, lon_deg, abs_alt, rel_alt, land_alt, Map
     Map.save("save_map.html")
     i = 0
     async for position in drone.telemetry.position():
-        # print(position)
+        # print('now position = ', position)
         i = i+1
         lat_deg = round(position.latitude_deg, 7)
         lon_deg = round(position.longitude_deg, 7)
         abs_alt = round(position.absolute_altitude_m, 2)
         rel_alt = round(position.relative_altitude_m, 2)
+        drone.lat = round(position.latitude_deg, 7)
+        drone.lon = round(position.longitude_deg, 7)
+        drone.absalt = round(position.absolute_altitude_m, 2)
+        drone.relalt = round(position.relative_altitude_m, 2)
         # print(lat_deg, lon_deg)
         if(i == 1):
             land_alt = abs_alt - rel_alt
+            drone.landalt = abs_alt - rel_alt
+            print('LAND ALT = ', drone.landalt)
         if(i % 5 == 0):
-            track.append([lat_deg, lon_deg])
+            track.append([drone.lat, drone.lon])
             folium.PolyLine(locations=track, color='#DC143C', weight = 2).add_to(Map)
     print('错误!  数据链断开!  错误!  数据链断开!  错误!  数据链断开!  ')
 
@@ -336,11 +343,11 @@ async def goto_test_drone(drone:System, goto_item):
     print('前往目标点')
     await drone.action.goto_location(goto_item[0], goto_item[1], goto_item[2], 0)
 
-def mission_part(loop, drone, mission_items):
+def mission_part(loop, drone, mission_items, threshold):
     # threading.Thread(target=mission, args=(loop, drone, mission_items)).start()
-    threading.Thread(target=mission, args=(loop, drone, mission_items)).start()
+    threading.Thread(target=mission, args=(loop, drone, mission_items, threshold)).start()
 
-def mission(loop, drone, mission_items):
+def mission(loop, drone, mission_items, threshold):
     loop.run_until_complete(my_mission_drone(drone, mission_items))
 
 async def my_mission_drone(drone:System, mission_items):
@@ -454,8 +461,8 @@ if __name__ == '__main__':
     win.show()
     connect_plane_thread = threading.Thread(target=connect_plane, args=(loop, drone))
     connect_plane_thread.start()
-    connect_plane_thread.join()
-    route_plan_thread = threading.Thread(target=route_plan, args=(boundary, ))
+    # connect_plane_thread.join()
+    route_plan_thread = threading.Thread(target=plan_route, args=(boundary, Map, mission_route, mission_Items))
     route_plan_thread.start()
     route_plan_thread.join()
     track_display_thread = threading.Thread(target=track_display, args=(loop, drone))

@@ -1,6 +1,7 @@
 from audioop import add
 from cgitb import html
 from cmath import sqrt
+from email import utils
 from email.charset import add_alias
 from json import load
 from sqlite3 import connect
@@ -21,6 +22,7 @@ from folium.features import DivIcon
 import asyncio
 from mavsdk import System
 from mavsdk.mission import *
+from utils.droneControl import my_mission, plan_route
 import nest_asyncio
 
 
@@ -269,10 +271,20 @@ def connect_plane(loop, drone):
     print('连接飞机中···')
     loop.run_until_complete(drone_connect(drone))
 
-async def drone_connect(drone):
+async def drone_connect(drone:System):
     # await drone.connect(system_address="udp://:14540")
     await drone.connect()
     print('飞机连接成功！')
+    print('设置参数中···')
+    await drone.param.set_param_float('FW_T_CLMB_MAX', 2)
+    await drone.param.set_param_float('FW_T_CLMB_R_SP', 2)
+    await drone.param.set_param_float('FW_T_SINK_MAX', 2)
+    await drone.param.set_param_float('FW_T_SINK_R_SP', 2)
+    await drone.param.set_param_float('FW_MAN_P_MAX', 30)
+    await drone.param.set_param_float('FW_MAN_R_MAX', 40)
+    await drone.param.set_param_float('FW_AIRSPD_STALL', 12)
+    await drone.param.set_param_float('FW_AIRSPD_TRIM', 16)
+
 
 def track_display(loop, drone):
     print('开启航迹显示中···')
@@ -438,7 +450,7 @@ if __name__ == '__main__':
     connect_plane_thread = threading.Thread(target=connect_plane, args=(loop, drone))
     connect_plane_thread.start()
     connect_plane_thread.join()
-    route_plan_thread = threading.Thread(target=route_plan, args=(boundary, ))
+    route_plan_thread = threading.Thread(target=plan_route, args=(boundary, Map, mission_route, mission_Items))
     route_plan_thread.start()
     route_plan_thread.join()
     track_display_thread = threading.Thread(target=track_display, args=(loop, drone))
