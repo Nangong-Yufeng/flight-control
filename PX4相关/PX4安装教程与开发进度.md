@@ -149,8 +149,8 @@ PX4官方文档使用的QGC所以我们暂时使用QGC作为地面站. (不过�
 ## TIPS  
 - 在启动px4+gazebo仿真前执行下列指令, 可将飞机位置变为我们学校  
 ```sh
-export PX4_HOME_LAT=22.58670
-export PX4_HOME_LON=113.96434
+export PX4_HOME_LAT=22.5904
+export PX4_HOME_LON=113.9754
 export PX4_HOME_ALT=29
 ```
 
