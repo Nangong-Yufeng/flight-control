@@ -26,9 +26,9 @@ from utils.droneControl import my_mission, plan_route
 import nest_asyncio
 
 
-init_mavsdk_server = r'"sources\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe -p 50051 serial://COM3:57600"' # 你要运行的exe文件
+init_mavsdk_server = r'"sources\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe -p 50051 serial://COM4:57600"' # 你要运行的exe文件
 mission_route = []
-mission_Items = [[22.5904, 113.9754, 80, 13]]
+mission_Items = []
 # land_mission_Items = [MissionItem(22.5912,
 #                                                    113.9753,
 #                                                     10,
@@ -76,7 +76,7 @@ lon_deg = -1.0
 abs_alt = -1.0
 rel_alt = -1.0
 land_alt = -1.0
-threshold = 0.00010  # 阈值10m
+threshold = 0.00020  # 阈值10m
 
 
 nest_asyncio.apply()
@@ -104,7 +104,7 @@ def add_blue_marker(Map, location):
     return Map
 
 # 调用高德地图http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}
-Map = folium.Map(location=[22.5904, 113.9754],
+Map = folium.Map(location=[22.8028633, 114.29547939999999],
                  max_zoom=19, 
                  zoom_start=19,
                  crs="EPSG3857",
@@ -255,11 +255,14 @@ def route_plan(boundary):  # 默认给出四点边界
             )
         ).add_to(Map)
         i = i+1
-        # mission_Items.append([point[0], point[1], 20, 10])
+        mission_Items.append([point[0], point[1], 40, 13])
     print('任务生成成功! ', mission_Items)
     folium.PolyLine(locations=mission_route, popup=folium.Popup('预计航线', max_width=200), color='#14DCB4').add_to(Map)
 
 def dis(point0, point1):
+    # print('======================')
+    # print(point0, point1)
+    # print('======================')
     return ((point0[0]-point1[0])**2 + (point0[1]-point1[1])**2)**0.5
 
 def open_mavsdk_server():
@@ -282,8 +285,8 @@ async def drone_connect(drone:System):
     await drone.param.set_param_float('FW_T_SINK_R_SP', 2)
     await drone.param.set_param_float('FW_MAN_P_MAX', 30)
     await drone.param.set_param_float('FW_MAN_R_MAX', 40)
-    await drone.param.set_param_float('FW_AIRSPD_STALL', 12)
-    await drone.param.set_param_float('FW_AIRSPD_TRIM', 16)
+    await drone.param.set_param_float('FW_AIRSPD_STALL', 10)
+    await drone.param.set_param_float('FW_AIRSPD_TRIM', 13)
 
 
 def track_display(loop, drone):
@@ -313,6 +316,7 @@ async def refresh_position(drone):
         # print(lat_deg, lon_deg)
         if(i == 1):
             land_alt = abs_alt - rel_alt
+            print(position)
         if(i % 2 == 0):
             track.append([lat_deg, lon_deg])
             folium.PolyLine(locations=track, color='#DC143C', weight = 2).add_to(Map)
@@ -356,6 +360,7 @@ async def my_mission_drone(drone:System, mission_items):
         print('--开始导航到目标点 (', i, '/', total, ')')
         now_position = await get_position(drone)
         total_dist = dis([now_position.latitude_deg, now_position.longitude_deg], [mission_item[0], mission_item[1]])
+        # print('total dist = ', total_dist)
         await drone.param.set_param_float('FW_AIRSPD_TRIM', mission_item[3])
         await drone.action.goto_location(mission_item[0], mission_item[1], land_alt + mission_item[2], 0)
         
@@ -370,7 +375,7 @@ async def my_mission_drone(drone:System, mission_items):
 
 async def waiting_to_waypoint(drone:System, waypoint, total_dist, i, total):
     global lat_deg, lon_deg, abs_alt, rel_alt, Map
-    last_process = 0
+    last_process = -1.0
     refresh_i = 0
     async for position in drone.telemetry.position():
         refresh_i = refresh_i + 1
@@ -378,15 +383,17 @@ async def waiting_to_waypoint(drone:System, waypoint, total_dist, i, total):
         lon_deg = round(position.longitude_deg, 7)
         abs_alt = round(position.absolute_altitude_m, 2)
         rel_alt = round(position.relative_altitude_m, 2)
-
+        # print('0001', position)
         now_dist = dis([lat_deg, lon_deg], [waypoint[0], waypoint[1]])
+        # print('now_dist = ', now_dist, 'total_dist = ', total_dist)
         now_process = round((total_dist - now_dist + threshold) / total_dist * 100)
+        # print(now_process,'=','((',total_dist, '-',now_dist, '+', threshold, ')/', total_dist, '*100')
         if(last_process != now_process):
             # print('--当前进度', now_process, '%')
             print("\r", end="")
             print("导航点({}/{})进度: {}%: ".format(i, total, now_process), "▋" * (now_process // 2), end="")
             sys.stdout.flush()
-        if((now_dist) < threshold) or (now_process>90 and now_process<last_process):  # 飞机位置与目标点距离小于threshold米, 或飞过目标点
+        if((now_dist) < threshold) or (now_process>80 and now_process<last_process):  # 飞机位置与目标点距离小于threshold米, 或飞过目标点
             print('--到达目标点 (', i, '/', total, ')')
             return
         last_process = now_process
@@ -440,7 +447,9 @@ async def get_position(drone:System):
 #             return
 
 if __name__ == '__main__':
-    boundary = [[22.5909, 113.9757], [22.5909, 113.9750], [22.5899, 113.9757], [22.5899, 113.9750]]
+    # boundary = [[22.5909, 113.9757], [22.5909, 113.9750], [22.5899, 113.9757], [22.5899, 113.9750]]
+    boundary = [[22.8032, 114.2953], [22.8033, 114.2956], [22.8022, 114.2955], [22.8023, 114.2958]]
+
     loop = asyncio.get_event_loop()
     drone = System(mavsdk_server_address='localhost', port=50051)
     app = QApplication(sys.argv)

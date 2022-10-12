@@ -157,9 +157,9 @@ def plan_route(boundary, Map, mission_route, mission_Items):  # 默认给出四�
         #     group0_now = [group0_now[0]+0.0005*cos0, group0_now[1]+0.0005*sin0]
         mission_route.append(group0_now)
         mission_route.append(group1_now)
-        group1_temp = [group1_now[0]+0.0006*cos1, group1_now[1]+0.0006*sin1]
+        group1_temp = [group1_now[0]+0.00065*cos1, group1_now[1]+0.00065*sin1]
         mission_route.append(group1_temp)
-        group0_temp = [group0_now[0]+0.0006*cos0, group0_now[1]+0.0006*sin0]
+        group0_temp = [group0_now[0]+0.00065*cos0, group0_now[1]+0.00065*sin0]
         mission_route.append(group0_temp)
         group0_now = [group0_now[0]+0.00015*cos0, group0_now[1]+0.00015*sin0]
         group1_now = [group1_now[0]+0.00015*cos1, group1_now[1]+0.00015*sin1]
@@ -168,6 +168,8 @@ def plan_route(boundary, Map, mission_route, mission_Items):  # 默认给出四�
     #     mission_route.append(group1_now)
     # else:
     #     mission_route.append(group0_now)
+    mission_route.append(group0_now)
+    mission_route.append(group1_now)
     print('航线生成成功！')
     print('mission_route = ', mission_route)
     i = 1
@@ -202,7 +204,7 @@ def plan_route(boundary, Map, mission_route, mission_Items):  # 默认给出四�
         #                                             float('0.1'),
         #                                             float('nan'),
         #                                             float('nan')))
-        mission_Items.append([point[0], point[1], 25, 16])
+        mission_Items.append([point[0], point[1], 40, 12])
     folium.PolyLine(locations=mission_route, popup=folium.Popup('预计航线', max_width=200), color='#14DCB4').add_to(Map)
 
 def add_red_marker(Map, location):
