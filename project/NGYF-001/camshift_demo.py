@@ -1,11 +1,41 @@
+from math import fabs
 import cv2
 import numpy as np
- 
- 
+import os
+import threading
+import asyncio
+from mavsdk import System
+import nest_asyncio
+
+nest_asyncio.apply()
+
+init_mavsdk_server = r'"sources\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe -p 50051 serial://COM4:57600"' # 你要运行的exe文件
+drone = System(mavsdk_server_address='localhost', port=50051)
+
+
 xs,ys,ws,hs = 0,0,0,0  #selection.x selection.y
 xo,yo=0,0 #origin.x origin.y
 selectObject = False
 trackObject = 0
+gimbal_servo = 0.0
+
+
+def open_mavsdk_server():
+        server = os.system(init_mavsdk_server)
+        print (server)
+
+
+def connect_plane(loop, drone):
+    print('连接飞机中···')
+    loop.run_until_complete(drone_connect(drone))
+
+
+async def drone_connect(drone:System):
+    # await drone.connect(system_address="udp://:14540")
+    await drone.connect()
+    print('飞机连接成功！')
+
+
 def onMouse(event, x, y, flags, prams):  # 设置跟踪框参数
     global xs,ys,ws,hs,selectObject,xo,yo,trackObject
     if selectObject == True:
@@ -21,7 +51,26 @@ def onMouse(event, x, y, flags, prams):  # 设置跟踪框参数
     elif event == cv2.EVENT_LBUTTONUP:
         selectObject = False
         trackObject = -1
- 
+
+
+def set_actuator_thread(loop, drone, add):
+    global gimbal_servo
+    loop.run_until_complete(set_actuator_drone(drone, gimbal_servo+add))
+    gimbal_servo += add
+
+
+async def set_actuator_drone(drone:System, gimbal_servo):
+    # await drone.action.arm()
+    await drone.action.set_actuator(1, gimbal_servo)
+    await asyncio.sleep(0.2)
+    
+
+loop = asyncio.get_event_loop()
+mavsdk_thread = threading.Thread(target=open_mavsdk_server).start()
+connect_plane_thread = threading.Thread(target=connect_plane, args=(loop, drone))
+connect_plane_thread.start()
+connect_plane_thread.join()
+threading.Thread(target=set_actuator_thread, args=(loop, drone, 0)).start()
 cap = cv2.VideoCapture(0)  # 摄像头输入
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -88,6 +137,17 @@ while(True):
         ret, track_window = cv2.CamShift(dst, track_window, term_crit)
         pts = cv2.boxPoints(ret)
         pts = np.int0(pts)
+        target_x = (pts[0][0]+pts[1][0]+pts[2][0]+pts[3][0]) / 4
+        target_y = (pts[0][1]+pts[1][1]+pts[2][1]+pts[3][1]) / 4
+        if(fabs(target_y - 540) > 100):
+            if(540-target_y > 0):
+                g_thread = threading.Thread(target=set_actuator_thread, args=(loop, drone, 0.1))
+                g_thread.start()
+                g_thread.join()
+            if(540-target_y < 0):
+                g_thread = threading.Thread(target=set_actuator_thread, args=(loop, drone, -0.1))
+                g_thread.start()
+                g_thread.join()
         img2 = cv2.polylines(frame,[pts],True, 255,2)
         
     if selectObject == True and ws>0 and hs>0:
