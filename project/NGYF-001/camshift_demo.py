@@ -61,7 +61,7 @@ def set_actuator_thread(loop, drone, add):
 
 async def set_actuator_drone(drone:System, gimbal_servo):
     # await drone.action.arm()
-    await drone.action.set_actuator(1, gimbal_servo)
+    await drone.action.set_actuator(2, gimbal_servo)
     await asyncio.sleep(0.2)
     
 

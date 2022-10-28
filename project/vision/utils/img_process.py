@@ -99,11 +99,13 @@ def identify(img, i):
     cutted_rgb_img = rotated[positiveNum(int(center[1]-long/2)):positiveNum(int(center[1]+long/2)), positiveNum(int(center[0]-short/2)):positiveNum(int(center[0]+short/2))]
     cv2.imwrite('out/'+str(i)+'cutted_rgb_img.png', cutted_rgb_img)
     cutted_mask = mask_rotated[positiveNum(int(center[1]-long/2)):positiveNum(int(center[1]+long/2)), positiveNum(int(center[0]-short/2)):positiveNum(int(center[0]+short/2))]
+    showimg('imshow', cutted_mask)
     # if(np.max(cutted_mask) is None):
     #     return
     if(cutted_mask.size == 0):
         return
     dilate=cv2.dilate(cutted_mask, None, iterations=1)
+    showimg('imshow', dilate)
     contours, _ = cv2.findContours(dilate, 2, 2)
     rect = findRectangle(contours)
     if(cutted_rgb_img.size == 0 or cutted_rgb_img is None):
@@ -124,4 +126,12 @@ def identify(img, i):
     # cv2.imshow('fbin_number_img.png', bin_number_img)
     # cv2.waitKey()
 
+def showimg(window, img):
+    cv2.imshow(window, img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    img = cv2.imread("test1.png")
+    identify(img, 0)
 
