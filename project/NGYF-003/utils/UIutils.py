@@ -1,6 +1,7 @@
 import cv2
 import threading
 import asyncio
+import nest_asyncio
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -8,7 +9,7 @@ from PyQt5.QtWebEngineWidgets import *
 from mavsdk import System
 from utils.DroneUtils import kill_thread
 
-
+nest_asyncio.apply()
 _translate = QtCore.QCoreApplication.translate
 
 def init_cam(MainWindow):
@@ -101,9 +102,9 @@ async def refresh_flightmode(drone:System, MainWindow):
         flight_mode = FM
         MainWindow.label_flight_mode.setText(_translate("MainWindow", "F_M:"+str(flight_mode)))
 
-def start_refresh(drone, loop):
-    threading.Thread(target=start_refresh_thread, args=(drone, loop)).start()
+def start_refresh(drone, loop, MainWindow):
+    threading.Thread(target=start_refresh_thread, args=(drone, loop, MainWindow)).start()
 
-def start_refresh_thread(drone:System, loop):
-    tasks = [refresh_airspd(), refresh_position(), refresh_battery(), refresh_flightmode()]
+def start_refresh_thread(drone:System, loop, MainWindow):
+    tasks = [refresh_airspd(drone, MainWindow), refresh_position(drone, MainWindow), refresh_battery(drone, MainWindow), refresh_flightmode(drone, MainWindow)]
     loop.run_until_complete(asyncio.wait(tasks))

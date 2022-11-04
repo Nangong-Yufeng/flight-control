@@ -1,15 +1,17 @@
 import threading
 import asyncio
 import os
+import nest_asyncio
 from mavsdk.mission import *
 from mavsdk import System
 from PyQt5.QtWidgets import *
 
+nest_asyncio.apply()
 init_mavsdk_server = r'"sources\mavsdk-windows-x64-release\bin\mavsdk_server_bin.exe -p 50051 serial://COM3:57600"' # 你要运行的exe文件
 
 def connect_plane(drone, loop):
         mavsdk_thread = threading.Thread(target=open_mavsdk_server)
-        mavsdk_thread.start()
+        # mavsdk_thread.start()
         connect_thread = threading.Thread(target=connect_plane_thread, args=(drone, loop))
         connect_thread.start()
 

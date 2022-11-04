@@ -1,5 +1,6 @@
 import cv2
 import os
+import nest_asyncio
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -8,6 +9,7 @@ from mavsdk import System
 from utils.UIutils import *
 from utils.DroneUtils import connect_plane, scout_mission, goto, arm, disarm, drop_bomb
 
+nest_asyncio.apply()
 _translate = QtCore.QCoreApplication.translate
 
 class Ui_MainWindow(QMainWindow):
@@ -46,6 +48,9 @@ class Ui_MainWindow(QMainWindow):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(2560, 1200)
+        font = QtGui.QFont()
+        font.setFamily("Arial") #括号里可以设置成自己想要的其它字体
+        font.setPointSize(18)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         # 新建一个QWebEngineView()对象
@@ -160,11 +165,14 @@ class Ui_MainWindow(QMainWindow):
         self.label_spd = QtWidgets.QLabel(self.centralwidget)
         self.label_spd.setGeometry(QtCore.QRect(320, 1100, 320, 50))
         self.label_spd.setObjectName("label_spd")
-        self.label_spd.setAlignment(QtCore.Qt.AlignTop)
+        # self.label_spd.setAlignment(QtCore.Qt.AlignTop)
+        self.label_spd.setFont(font)
+        
         self.label_battery = QtWidgets.QLabel(self.centralwidget)
         self.label_battery.setGeometry(QtCore.QRect(320, 1150, 320, 50))
         self.label_battery.setObjectName("label_battery")
-        self.label_battery.setAlignment(QtCore.Qt.AlignTop)
+        self.label_battery.setFont(font)
+        # self.label_battery.setAlignment(QtCore.Qt.AlignTop)
         # self.label_4 = QtWidgets.QLabel(self.centralwidget)
         # self.label_4.setGeometry(QtCore.QRect(990, 610, 310, 30))
         # self.label_4.setObjectName("label_4")
@@ -177,26 +185,26 @@ class Ui_MainWindow(QMainWindow):
         self.label_flight_mode = QtWidgets.QLabel(self.centralwidget)
         self.label_flight_mode.setGeometry(QtCore.QRect(1920, 1080, 640, 50))
         self.label_flight_mode.setObjectName("label_flight_mode")
-        self.label_flight_mode.setAlignment(QtCore.Qt.AlignTop)
+        self.label_flight_mode.setFont(font)
         self.label_lat = QtWidgets.QLabel(self.centralwidget)
         self.label_lat.setGeometry(QtCore.QRect(640, 1100, 320, 50))
         self.label_lat.setObjectName("label_lat")
-        self.label_lat.setAlignment(QtCore.Qt.AlignTop)
+        self.label_lat.setFont(font)
         self.label_lon = QtWidgets.QLabel(self.centralwidget)
         self.label_lon.setGeometry(QtCore.QRect(640, 1150, 320, 50))
         self.label_lon.setObjectName("label_lon")
-        self.label_lon.setAlignment(QtCore.Qt.AlignTop)
+        self.label_lon.setFont(font)
         # self.label_10 = QtWidgets.QLabel(self.centralwidget)
         # self.label_10.setGeometry(QtCore.QRect(990, 710, 310, 30))
         # self.label_10.setObjectName("label_10")
         self.label_abs_alt = QtWidgets.QLabel(self.centralwidget)
         self.label_abs_alt.setGeometry(QtCore.QRect(0, 1150, 320, 50))
         self.label_abs_alt.setObjectName("label_abs_alt")
-        self.label_abs_alt.setAlignment(QtCore.Qt.AlignTop)
+        self.label_abs_alt.setFont(font)
         self.label_rel_alt = QtWidgets.QLabel(self.centralwidget)
         self.label_rel_alt.setGeometry(QtCore.QRect(0, 1100, 320, 50))
         self.label_rel_alt.setObjectName("label_rel_alt")
-        self.label_rel_alt.setAlignment(QtCore.Qt.AlignTop)
+        self.label_rel_alt.setFont(font)
         # self.label_13 = QtWidgets.QLabel(self.centralwidget)
         # self.label_13.setGeometry(QtCore.QRect(990, 760, 310, 30))
         # self.label_13.setObjectName("label_13")
@@ -291,7 +299,7 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_kill.clicked.connect(lambda: kill_confirm(self.drone, self.loop, self))
         # self.pushButton_14.clicked.connect(self.bomb_mode)
         self.pushButton_manual_bomb.clicked.connect(lambda: drop_bomb(self.drone, self.loop))
-        self.pushButton_refresh_data.clicked.connect(lambda: start_refresh(self.drone, self.loop))
+        self.pushButton_refresh_data.clicked.connect(lambda: start_refresh(self.drone, self.loop, self))
         # self.pushButton_18.clicked.connect(lambda: self.rudder_control(-0.6))
         # self.pushButton_19.clicked.connect(lambda: self.rudder_control(0))
         # self.pushButton_20.clicked.connect(lambda: self.go_deg(-45, 0))
