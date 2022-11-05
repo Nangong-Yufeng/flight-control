@@ -1,6 +1,13 @@
 import cv2
 import os
 import nest_asyncio
+import numpy as np
+import matplotlib
+matplotlib.use("Qt5Agg")
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg # pyqt5的画布
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.animation import FuncAnimation
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -9,8 +16,10 @@ from mavsdk import System
 from utils.UIutils import *
 from utils.DroneUtils import connect_plane, scout_mission, goto, arm, disarm, drop_bomb
 
+
 nest_asyncio.apply()
 _translate = QtCore.QCoreApplication.translate
+
 
 class Ui_MainWindow(QMainWindow):
     def __init__(self, loop):
@@ -54,16 +63,21 @@ class Ui_MainWindow(QMainWindow):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         # 新建一个QWebEngineView()对象
-        self.qwebengine = QWebEngineView(self)
-        # 设置网页在窗口中显示的位置和大小
-        self.qwebengine.setGeometry(1920, 0, 640, 640)
-        # 在QWebEngineView中加载网址
-        path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
-        path = path.replace('\\', '/')
-        self.qwebengine.load(QUrl(path))
+        # self.qwebengine = QWebEngineView(self)
+        # # 设置网页在窗口中显示的位置和大小
+        # self.qwebengine.setGeometry(1920, 0, 640, 640)
+        # # 在QWebEngineView中加载网址
+        # path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
+        # path = path.replace('\\', '/')
+        # self.qwebengine.load(QUrl(path))
         # self.centralwidget = QtWidgets.QWidget(MainWindow)
         # self.centralwidget.setObjectName("centralwidget")
-
+        self.label = QtWidgets.QLabel(self)
+        self.label.setGeometry(QtCore.QRect(1920, 0, 640, 640))
+        self.canvas = MyMatPlotAnimation(width=5, heigh=4, dpi=100)
+        plotcos(self)
+        self.hboxlayout = QtWidgets.QHBoxLayout(self.label)
+        self.hboxlayout.addWidget(self.canvas)
         
         self.label_vision = QtWidgets.QLabel(self.centralwidget)
         self.label_vision.setGeometry(QtCore.QRect(0, 0, 1920, 1080))
@@ -231,7 +245,7 @@ class Ui_MainWindow(QMainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "NantongYufeng"))
         path = "file:\\" + os.getcwd() + "\\sources/save_map.html"
         path = path.replace('\\', '/')
-        self.qwebengine.load(QUrl(path))
+        # self.qwebengine.load(QUrl(path))
         # self.pushButton.setText(_translate("MainWindow", "记录飞机所在位置为投弹点1"))
         # self.pushButton_2.setText(_translate("MainWindow", "记录飞机所在位置为投弹点2"))
         # self.pushButton_goto4.setText(_translate("MainWindow", "记录飞机所在位置为投弹点3"))
@@ -312,3 +326,5 @@ class Ui_MainWindow(QMainWindow):
         # self.pushButton_27.clicked.connect(lambda: self.go_deg(90, 0))
         # self.pushButton_28.clicked.connect(lambda: self.go_deg(-90, 0))
         # self.pushButton_29.clicked.connect(lambda: self.go_deg(-15, 0))
+    
+    
