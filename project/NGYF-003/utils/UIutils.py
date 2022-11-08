@@ -4,6 +4,7 @@ import asyncio
 import nest_asyncio
 import numpy as np
 import matplotlib
+import math
 matplotlib.use("Qt5Agg")
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg # pyqt5的画布
 import matplotlib.pyplot as plt
@@ -14,7 +15,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import *
 from mavsdk import System
+from PIL import ImageDraw
 from utils.DroneUtils import kill_thread
+from utils.NGYFDetector.NGYFDetector import NGYFDetector
 
 global_lat = []
 global_lon = []
@@ -97,7 +100,7 @@ def kill_confirm(drone, loop, MainWindow):
 def button_camera_open(MainWindow):
     if not MainWindow.timer_video.isActive():
         # 默认使用第一个本地camera
-        flag = MainWindow.cap.open(2)
+        flag = MainWindow.cap.open("utils/NGYFDetector/WIN_20221026_16_51_17_Pro.mp4")
         if flag == False:
             QtWidgets.QMessageBox.warning(
                 MainWindow, u"Warning", u"打开摄像头失败", buttons=QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.Ok)
@@ -121,9 +124,27 @@ def button_camera_open(MainWindow):
         # MainWindow.pushButton_16.setDisabled(True)
 
 def show_video_frame(MainWindow):
-
+    detector = NGYFDetector()
+    
     flag, img = MainWindow.cap.read()
+    font = cv2.FONT_HERSHEY_SIMPLEX
     if flag: 
+        # draw = ImageDraw.Draw(img)
+        res = detector.detect(img)
+        # 绘制椭圆
+        # 参数1：图片
+        # 参数2：圆心
+        # 参数3：横纵轴长
+        # 参数4：倾斜角度
+        # 参数5：绘制起点角度
+        # 参数6：绘制终点角度
+        # 参数7：BGR颜色
+        # 参数8：宽度 值为-1时填充
+        for i in range(len(res[0])):
+            cv2.ellipse(img, tuple(map(int, res[1][i][0])), tuple(map(int, res[1][i][1])), res[1][i][2], 0, 360, (114, 255, 191), 2);
+            point = (res[1][i][0][0]+res[1][i][1][1]*math.cos(math.radians(res[1][i][2])), res[1][i][0][1]+res[1][i][1][1]*math.sin(math.radians(res[1][i][2])))
+            cv2.putText(img, str(res[0][i]), tuple(map(int, point)), font, 1, (0, 0, 255), 2)
+            # draw.text()
         MainWindow.out.write(img)
         show = cv2.resize(img, (1920, 1080))
         MainWindow.result = cv2.cvtColor(show, cv2.COLOR_BGR2RGB)

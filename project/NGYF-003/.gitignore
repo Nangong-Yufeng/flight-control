@@ -1,3 +1,5 @@
 *.avi
 utils/__pycache__/
+utils/NGYFDetector/__pycache__/
 sources/__pycache__
+__pycache__
