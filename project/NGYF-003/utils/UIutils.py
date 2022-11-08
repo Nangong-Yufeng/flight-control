@@ -16,13 +16,14 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import *
 from mavsdk import System
 from PIL import ImageDraw
-from utils.DroneUtils import kill_thread
+from utils.DroneUtils import kill_thread, drop_bomb_thread
 from utils.NGYFDetector.NGYFDetector import NGYFDetector
 
 global_lat = []
 global_lon = []
 x_data = []
 y_data = []
+auto_bomb_flag = False
 
 nest_asyncio.apply()
 _translate = QtCore.QCoreApplication.translate
@@ -124,27 +125,43 @@ def button_camera_open(MainWindow):
         # MainWindow.pushButton_16.setDisabled(True)
 
 def show_video_frame(MainWindow):
+    global auto_bomb_flag
+
     detector = NGYFDetector()
-    
     flag, img = MainWindow.cap.read()
+    b_blk = np.zeros(img.shape, np.uint8)
+    cv2.rectangle(b_blk, (640, 0), (1280, 100), (255, 0, 0), -1)
+    r_blk = np.zeros(img.shape, np.uint8)
+    cv2.rectangle(b_blk, (640, 0), (1280, 100), (0, 0, 255), -1)
     font = cv2.FONT_HERSHEY_SIMPLEX
     if flag: 
-        # draw = ImageDraw.Draw(img)
         res = detector.detect(img)
-        # 绘制椭圆
-        # 参数1：图片
-        # 参数2：圆心
-        # 参数3：横纵轴长
-        # 参数4：倾斜角度
-        # 参数5：绘制起点角度
-        # 参数6：绘制终点角度
-        # 参数7：BGR颜色
-        # 参数8：宽度 值为-1时填充
-        for i in range(len(res[0])):
-            cv2.ellipse(img, tuple(map(int, res[1][i][0])), tuple(map(int, res[1][i][1])), res[1][i][2], 0, 360, (114, 255, 191), 2);
-            point = (res[1][i][0][0]+res[1][i][1][1]*math.cos(math.radians(res[1][i][2])), res[1][i][0][1]+res[1][i][1][1]*math.sin(math.radians(res[1][i][2])))
-            cv2.putText(img, str(res[0][i]), tuple(map(int, point)), font, 1, (0, 0, 255), 2)
-            # draw.text()
+        if(auto_bomb_flag):
+            # for i in range(len(res[0])):
+            #     point = (res[1][i][0][0], res[1][i][0][1])
+            #     if(point[0])
+            
+            
+            
+            for i in range(len(res[0])):
+                cv2.ellipse(img, tuple(map(int, res[1][i][0])), tuple(map(int, res[1][i][1])), res[1][i][2], 0, 360, (114, 255, 191), 2);
+                point = (res[1][i][0][0]+res[1][i][1][1]*math.cos(math.radians(res[1][i][2])), res[1][i][0][1]+res[1][i][1][1]*math.sin(math.radians(res[1][i][2])))
+                cv2.putText(img, str(res[0][i]), tuple(map(int, point)), font, 1, (0, 0, 255), 2)
+                point = (res[1][i][0][0], res[1][i][0][1])
+                if(640 < point[0] < 1280) and (0 < point[1] < 100):
+                    threading.Thread(target=drop_bomb_thread, args=(MainWindow.drone, MainWindow.loop))
+                    print("===BOMB===BOMB===BOMB===BOMB===")
+                    auto_bomb_flag = False
+                    break
+            if(auto_bomb_flag):
+                img = cv2.addWeighted(img, 1.0, b_blk, 0.5, 1)
+            else:
+                img = cv2.addWeighted(img, 1.0, r_blk, 0.5, 1)
+        else:
+            for i in range(len(res[0])):
+                cv2.ellipse(img, tuple(map(int, res[1][i][0])), tuple(map(int, res[1][i][1])), res[1][i][2], 0, 360, (114, 255, 191), 2);
+                point = (res[1][i][0][0]+res[1][i][1][1]*math.cos(math.radians(res[1][i][2])), res[1][i][0][1]+res[1][i][1][1]*math.sin(math.radians(res[1][i][2])))
+                cv2.putText(img, str(res[0][i]), tuple(map(int, point)), font, 1, (0, 0, 255), 2)
         MainWindow.out.write(img)
         show = cv2.resize(img, (1920, 1080))
         MainWindow.result = cv2.cvtColor(show, cv2.COLOR_BGR2RGB)
@@ -205,5 +222,10 @@ def start_refresh_thread(drone:System, loop, MainWindow):
     tasks = [refresh_airspd(drone, MainWindow), refresh_position(drone, MainWindow), refresh_battery(drone, MainWindow), refresh_flightmode(drone, MainWindow)]
     loop.run_until_complete(asyncio.wait(tasks))
 
+def auto_bomb_begin():
+    global auto_bomb_flag
+    auto_bomb_flag = True
 
-
+def auto_bomb_end():
+    global auto_bomb_flag
+    auto_bomb_flag = False
