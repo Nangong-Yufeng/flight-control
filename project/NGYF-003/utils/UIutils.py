@@ -177,6 +177,15 @@ def show_video_frame(MainWindow):
         MainWindow.pushButton_camera.setDisabled(False)
         MainWindow.init_cam()
 
+async def set_map(drone: System, MainWindow):
+    async for position in drone.telemetry.position():
+        lat_deg = round(position.latitude_deg, 7)
+        lon_deg = round(position.longitude_deg, 7)
+        # MainWindow.canvas.axes.set_xlim(lat_deg-0.0015, lat_deg+0.0015)
+        # MainWindow.canvas.axes.set_ylim(lon_deg-0.0015, lon_deg+0.0015)
+        MainWindow.set_lim(lat_deg, lon_deg)
+        break; # do nothing
+
 async def refresh_position(drone:System, MainWindow):
     i = 0
     global global_lat, global_lon
@@ -188,6 +197,7 @@ async def refresh_position(drone:System, MainWindow):
         
         abs_alt = round(position.absolute_altitude_m, 2)
         rel_alt = round(position.relative_altitude_m, 2)
+        
         MainWindow.label_lat.setText(_translate("MainWindow", "lat:"+str(lat_deg)))
         MainWindow.label_lon.setText(_translate("MainWindow", "lon:"+str(lon_deg)))
         MainWindow.label_abs_alt.setText(_translate("MainWindow", "H(abs):"+str(abs_alt)))
@@ -199,9 +209,16 @@ async def refresh_position(drone:System, MainWindow):
             # print(lat_deg, lon_deg)
 
 async def refresh_airspd(drone:System, MainWindow):
-    async for timestamp_us, latitude_deg, longitude_deg, absolute_altitude_m, hdop, vdop, velocity_m_s, cog_deg, altitude_ellipsoid_m, horizontal_uncertainty_m, vertical_uncertainty_m, velocity_uncertainty_m_s, heading_uncertainty_deg, yaw_deg in drone.telemetry.RawGps():
+    # async for timestamp_us, latitude_deg, longitude_deg, absolute_altitude_m, hdop, vdop, velocity_m_s, cog_deg, altitude_ellipsoid_m, horizontal_uncertainty_m, vertical_uncertainty_m, velocity_uncertainty_m_s, heading_uncertainty_deg, yaw_deg in drone.telemetry.RawGps():
         # print(fixedwingmetrics)
-        speed = round(velocity_m_s, 2)
+        # print("velocity_m_s = {}".format(velocity_m_s))
+        # print("velocity_uncertainty_m_s = {}".format(velocity_uncertainty_m_s))
+    # print("in refresh airspd")
+    async for velocity in drone.telemetry.velocity_ned():
+        # print("north_m_s = {}".format(velocity.north_m_s))
+        # print("east_m_s = {}".format(velocity.east_m_s))
+        speed = math.sqrt(velocity.north_m_s*velocity.north_m_s + velocity.east_m_s*velocity.east_m_s)
+        speed = round(speed, 2)
         MainWindow.label_spd.setText(_translate("MainWindow", "S:"+str(speed)))
 
 async def refresh_battery(drone:System, MainWindow):
@@ -219,6 +236,7 @@ def start_refresh(drone, loop, MainWindow):
     threading.Thread(target=start_refresh_thread, args=(drone, loop, MainWindow)).start()
 
 def start_refresh_thread(drone:System, loop, MainWindow):
+    loop.run_until_complete(set_map(drone, MainWindow))
     tasks = [refresh_airspd(drone, MainWindow), refresh_position(drone, MainWindow), refresh_battery(drone, MainWindow), refresh_flightmode(drone, MainWindow)]
     loop.run_until_complete(asyncio.wait(tasks))
 

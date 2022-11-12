@@ -337,4 +337,7 @@ class Ui_MainWindow(QMainWindow):
         # self.pushButton_28.clicked.connect(lambda: self.go_deg(-90, 0))
         # self.pushButton_29.clicked.connect(lambda: self.go_deg(-15, 0))
     
-    
+    def set_lim(self, x, y):
+        # print("in set_lim")
+        self.canvas.axes.set_xlim(x-0.0015, x+0.0015)
+        self.canvas.axes.set_ylim(y-0.0015, y+0.0015)
