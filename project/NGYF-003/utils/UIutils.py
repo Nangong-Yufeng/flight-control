@@ -101,17 +101,17 @@ def kill_confirm(drone, loop, MainWindow):
 def button_camera_open(MainWindow):
     if not MainWindow.timer_video.isActive():
         # 默认使用第一个本地camera
-        flag = MainWindow.cap.open("utils/NGYFDetector/WIN_20221026_16_51_17_Pro.mp4")
+        flag = MainWindow.cap.open(0)
         if flag == False:
             QtWidgets.QMessageBox.warning(
                 MainWindow, u"Warning", u"打开摄像头失败", buttons=QtWidgets.QMessageBox.Ok, defaultButton=QtWidgets.QMessageBox.Ok)
         else:
-            MainWindow.out = cv2.VideoWriter('prediction.avi', cv2.VideoWriter_fourcc(
-                *'MJPG'), 20, (int(MainWindow.cap.get(3)), int(MainWindow.cap.get(4))))
             MainWindow.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc('M', 'J', 'P', 'G'))
             MainWindow.cap.set(cv2.CAP_PROP_FPS, 30)
             MainWindow.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
             MainWindow.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+            MainWindow.out = cv2.VideoWriter('prediction.avi', cv2.VideoWriter_fourcc(
+                *'MJPG'), 20, (int(MainWindow.cap.get(3)), int(MainWindow.cap.get(4))))
             MainWindow.timer_video.start(30)
             MainWindow.pushButton_camera.setText(u"关闭视觉")
             # MainWindow.pushButton_16.setDisabled(False)
@@ -149,7 +149,7 @@ def show_video_frame(MainWindow):
                 cv2.putText(img, str(res[0][i]), tuple(map(int, point)), font, 1, (0, 0, 255), 2)
                 point = (res[1][i][0][0], res[1][i][0][1])
                 if(640 < point[0] < 1280) and (0 < point[1] < 100):
-                    threading.Thread(target=drop_bomb_thread, args=(MainWindow.drone, MainWindow.loop))
+                    threading.Thread(target=drop_bomb_thread, args=(MainWindow.drone, MainWindow.loop)).start()
                     print("===BOMB===BOMB===BOMB===BOMB===")
                     auto_bomb_flag = False
                     break
@@ -192,16 +192,16 @@ async def refresh_position(drone:System, MainWindow):
         MainWindow.label_lon.setText(_translate("MainWindow", "lon:"+str(lon_deg)))
         MainWindow.label_abs_alt.setText(_translate("MainWindow", "H(abs):"+str(abs_alt)))
         MainWindow.label_rel_alt.setText(_translate("MainWindow", "H(rel):"+str(rel_alt)))
-        if(i % 20 == 0):
+        if(i % 3 == 0):
             # print("------add figure------")
             global_lat.append(lat_deg)
             global_lon.append(lon_deg)
-            print(lat_deg, lon_deg)
+            # print(lat_deg, lon_deg)
 
 async def refresh_airspd(drone:System, MainWindow):
-    async for fixedwingmetrics in drone.telemetry.fixedwing_metrics():
+    async for timestamp_us, latitude_deg, longitude_deg, absolute_altitude_m, hdop, vdop, velocity_m_s, cog_deg, altitude_ellipsoid_m, horizontal_uncertainty_m, vertical_uncertainty_m, velocity_uncertainty_m_s, heading_uncertainty_deg, yaw_deg in drone.telemetry.RawGps():
         # print(fixedwingmetrics)
-        speed = round(fixedwingmetrics.airspeed_m_s, 2)
+        speed = round(velocity_m_s, 2)
         MainWindow.label_spd.setText(_translate("MainWindow", "S:"+str(speed)))
 
 async def refresh_battery(drone:System, MainWindow):

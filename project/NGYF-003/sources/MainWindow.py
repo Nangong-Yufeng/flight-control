@@ -26,8 +26,8 @@ class Ui_MainWindow(QMainWindow):
         super(QMainWindow, self).__init__()
         self.timer_video = QtCore.QTimer()
         self.loop = loop
-        # self.drone = System(mavsdk_server_address='localhost', port=50051) # drone on windows
-        self.drone = System() # drone on ubuntu
+        self.drone = System(mavsdk_server_address='localhost', port=50051) # drone on windows
+        # self.drone = System() # drone on ubuntu
         self.setupUi(self)
         init_cam(self)
         self.init_slots()
