@@ -75,7 +75,7 @@ while(True):
             # beta  - 范围归一化时的上限范围; 它不用于标准规范化
             # normType  - 规范化类型 这里的NORM_MINMAX是数组的数值被平移或缩放到一个指定的范围，线性归一化。
             # dtype  - 当为负数时，输出数组与src的类型相同；否则，它具有与src相同的通道数；深度=CV_MAT_DEPTH（dtype）
-            # mask  - 可选的操作掩码。
+            # mask  - 可选的操作掩码。#
             cv2.normalize(roi_hist,roi_hist,0,255,cv2.NORM_MINMAX)
             trackObject = 1
         print('roi_hist = ', roi_hist)
