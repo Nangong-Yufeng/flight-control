@@ -24,9 +24,19 @@ global_lon = []
 x_data = []
 y_data = []
 auto_bomb_flag = False
+detect_flag = True # True为未侦察结束, False为侦察结束
+bomb_gps = [0, 0]
 
 nest_asyncio.apply()
 _translate = QtCore.QCoreApplication.translate
+
+detector = NGYFDetector()
+b_blk = np.zeros((1920, 1080), np.uint8)
+cv2.rectangle(b_blk, (480, 0), (1440, 100), (255, 0, 0), -1)
+r_blk = np.zeros((1920, 1080), np.uint8)
+cv2.rectangle(r_blk, (480, 0), (1440, 100), (0, 0, 255), -1)
+font = cv2.FONT_HERSHEY_SIMPLEX
+
 
 class MyMatPlotAnimation(FigureCanvasQTAgg):
     """
@@ -111,7 +121,7 @@ def button_camera_open(MainWindow):
             MainWindow.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
             MainWindow.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
             MainWindow.out = cv2.VideoWriter('prediction.avi', cv2.VideoWriter_fourcc(
-                *'MJPG'), 20, (int(MainWindow.cap.get(3)), int(MainWindow.cap.get(4))))
+                *'MJPG'), 30, (int(MainWindow.cap.get(3)), int(MainWindow.cap.get(4))))
             MainWindow.timer_video.start(30)
             MainWindow.pushButton_camera.setText(u"关闭视觉")
             # MainWindow.pushButton_16.setDisabled(False)
@@ -124,44 +134,64 @@ def button_camera_open(MainWindow):
         MainWindow.pushButton_camera.setText(u"连接视觉")
         # MainWindow.pushButton_16.setDisabled(True)
 
+def mid_num(array):
+    array.sort()
+    return array[1] # 返回中位数
+
+def select_num(array, targets, nums):
+    ret = [[], []]
+    for i in range(len(array[0])):
+        if array[0][i] in nums:
+            ret[0].append(array[0][i])
+            ret[1].append(array[1][i])
+            add_target_num(targets, array[0][i])
+    return ret
+
+def add_target_num(array, num):
+    global detect_flag
+
+    if num not in array:
+        array.append(num)
+        print("识别结果: {}".format(num))
+        if len(array) == 3:
+            detect_flag = False
+            print("识别结束, 结果为: {}中位数为:{}".format(array, mid_num(array)))
+
 def show_video_frame(MainWindow):
     global auto_bomb_flag
 
-    detector = NGYFDetector()
+    # detector = NGYFDetector()
     flag, img = MainWindow.cap.read()
-    b_blk = np.zeros(img.shape, np.uint8)
-    cv2.rectangle(b_blk, (640, 0), (1280, 100), (255, 0, 0), -1)
-    r_blk = np.zeros(img.shape, np.uint8)
-    cv2.rectangle(b_blk, (640, 0), (1280, 100), (0, 0, 255), -1)
-    font = cv2.FONT_HERSHEY_SIMPLEX
+    
     if flag: 
-        res = detector.detect(img)
-        if(auto_bomb_flag):
-            # for i in range(len(res[0])):
-            #     point = (res[1][i][0][0], res[1][i][0][1])
-            #     if(point[0])
-            
-            
-            
-            for i in range(len(res[0])):
-                cv2.ellipse(img, tuple(map(int, res[1][i][0])), tuple(map(int, res[1][i][1])), res[1][i][2], 0, 360, (114, 255, 191), 2);
-                point = (res[1][i][0][0]+res[1][i][1][1]*math.cos(math.radians(res[1][i][2])), res[1][i][0][1]+res[1][i][1][1]*math.sin(math.radians(res[1][i][2])))
-                cv2.putText(img, str(res[0][i]), tuple(map(int, point)), font, 1, (0, 0, 255), 2)
-                point = (res[1][i][0][0], res[1][i][0][1])
-                if(640 < point[0] < 1280) and (0 < point[1] < 100):
-                    threading.Thread(target=drop_bomb_thread, args=(MainWindow.drone, MainWindow.loop)).start()
-                    print("===BOMB===BOMB===BOMB===BOMB===")
-                    auto_bomb_flag = False
-                    break
+        if detect_flag: 
+            res = detector.detect(img)
+            res = select_num(res, MainWindow.targets, [3, 47, 90]) # 
             if(auto_bomb_flag):
-                img = cv2.addWeighted(img, 1.0, b_blk, 0.5, 1)
+                # for i in range(len(res[0])):
+                #     point = (res[1][i][0][0], res[1][i][0][1])
+                #     if(point[0])
+                
+                for i in range(len(res[0])):
+                    cv2.ellipse(img, tuple(map(int, res[1][i][0])), tuple(map(int, res[1][i][1])), res[1][i][2], 0, 360, (114, 255, 191), 2);
+                    point = (res[1][i][0][0]+res[1][i][1][1]*math.cos(math.radians(res[1][i][2])), res[1][i][0][1]+res[1][i][1][1]*math.sin(math.radians(res[1][i][2])))
+                    cv2.putText(img, str(res[0][i]), tuple(map(int, point)), font, 1, (0, 0, 255), 2)
+                    point = (res[1][i][0][0], res[1][i][0][1])
+                    if(480 < point[0] < 1440) and (0 < point[1] < 100):
+                        threading.Thread(target=drop_bomb_thread, args=(MainWindow.drone, MainWindow.loop)).start()
+                        print("===BOMB===BOMB===BOMB===BOMB===")
+                        auto_bomb_flag = False
+                        break
+                if(auto_bomb_flag):
+                    img = cv2.addWeighted(img, 1.0, b_blk, 0.5, 1)
+                else:
+                    img = cv2.addWeighted(img, 1.0, r_blk, 0.5, 1)
             else:
-                img = cv2.addWeighted(img, 1.0, r_blk, 0.5, 1)
-        else:
-            for i in range(len(res[0])):
-                cv2.ellipse(img, tuple(map(int, res[1][i][0])), tuple(map(int, res[1][i][1])), res[1][i][2], 0, 360, (114, 255, 191), 2);
-                point = (res[1][i][0][0]+res[1][i][1][1]*math.cos(math.radians(res[1][i][2])), res[1][i][0][1]+res[1][i][1][1]*math.sin(math.radians(res[1][i][2])))
-                cv2.putText(img, str(res[0][i]), tuple(map(int, point)), font, 1, (0, 0, 255), 2)
+                
+                for i in range(len(res[0])):
+                    cv2.ellipse(img, tuple(map(int, res[1][i][0])), tuple(map(int, res[1][i][1])), res[1][i][2], 0, 360, (114, 255, 191), 2);
+                    point = (res[1][i][0][0]+res[1][i][1][1]*math.cos(math.radians(res[1][i][2])), res[1][i][0][1]+res[1][i][1][1]*math.sin(math.radians(res[1][i][2])))
+                    cv2.putText(img, str(res[0][i]), tuple(map(int, point)), font, 1, (0, 0, 255), 2)
         MainWindow.out.write(img)
         show = cv2.resize(img, (1920, 1080))
         MainWindow.result = cv2.cvtColor(show, cv2.COLOR_BGR2RGB)
@@ -175,7 +205,7 @@ def show_video_frame(MainWindow):
         MainWindow.out.release()
         MainWindow.label_vision.clear()
         MainWindow.pushButton_camera.setDisabled(False)
-        MainWindow.init_cam()
+        init_cam(MainWindow)
 
 async def set_map(drone: System, MainWindow):
     async for position in drone.telemetry.position():

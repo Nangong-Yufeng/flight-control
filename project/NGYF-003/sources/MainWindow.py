@@ -6,9 +6,10 @@ import matplotlib
 matplotlib.use("Qt5Agg")
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg # pyqt5的画布
 import matplotlib.pyplot as plt
+
 from matplotlib.figure import Figure
 from matplotlib.animation import FuncAnimation
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWebEngineWidgets import *
@@ -18,8 +19,20 @@ from utils.DroneUtils import connect_plane, scout_mission, goto, arm, disarm, dr
 
 
 nest_asyncio.apply()
+main_class = uic.loadUiType("Control.ui")[0]
 _translate = QtCore.QCoreApplication.translate
 
+# class ControlWindow(QDialog):
+#     def __init__(self, parent, loop, drone):
+#         super(ControlWindow, self).__init__(parent)
+#         control_ui = "Control.ui"
+#         uic.loadUi(control_ui, self)
+#         self.show()
+        
+#         threading.Thread(target = drone_keyboard).start()
+#         print("Input keyboard")
+#         loop = asyncio.get_event_loop()
+#         loop.run_until_complete(manual_controls(drone))
 
 class Ui_MainWindow(QMainWindow):
     def __init__(self, loop):
@@ -33,23 +46,105 @@ class Ui_MainWindow(QMainWindow):
         self.init_slots()
         self.cap = cv2.VideoCapture()
         self.out = None
+        self.targets = [] # 标靶数字
+        # self.waypoint_lists = [ # 龙岗
+        #     [22.8031954, 114.2962549, 30, 12, 2],
+        #     [22.8037724, 114.2956346, 30, 12, 2],
+        #     [22.8032220, 114.2953028, 30, 12, 2],
+        #     [22.8031555, 114.2952963, 30, 12, 2],
+        #     [22.8030942, 114.2953248, 30, 12, 1],
+        #     [22.8029526, 114.2953549, 30, 12, 1],
+        #     [22.8028139, 114.2953834, 30, 12, 1],
+        #     [22.8027599, 114.2953913, 30, 12, 1],
+        #     [22.8025204, 114.2954563, 30, 12, 1],
+        #     [22.8023335, 114.2954863, 30, 12, 1],
+        #     [22.8021671, 114.2955259, 30, 12, 1], 
+        #     [22.8020401, 114.2955497, 30, 12, 1], 
+        #     [22.8020172, 114.2955569, 30, 12, 1], 
+        #     [22.8019363, 114.2955737, 30, 12, 1], 
+        #     [22.8017915, 114.2956036, 30, 12, 1],
+        #     [22.8016020, 114.2956391, 30, 12, 1]
+
+        # ]
+        # self.waypoint_lists = [ # 大学城体育场
+        #     [22.5932748, 113.9751824, 80, 12, 1],
+        #     [22.5930920, 113.9751824, 80, 12, 1],
+        #     [22.5924288, 113.9752456, 80, 12, 1], 
+        #     [22.5919720, 113.9752622, 80, 12, 1],
+        #     [22.5915029, 113.9752555, 80, 12, 1], 
+        #     [22.5909296, 113.9752788, 80, 12, 1],
+        #     [22.5905679, 113.9753087, 80, 12, 1], 
+        #     [22.5902644, 113.9753252, 80, 12, 1],
+        #     [22.5899179, 113.9753087, 80, 12, 1],
+        #     [22.5894244, 113.9753485, 80, 12, 1],
+        #     [22.5889829, 113.9753618, 80, 12, 2],
+        #     [22.5884372, 113.9753585, 80, 12, 2],
+        #     [22.5881122, 113.9753319, 80, 12, 2]
+        # ]
+        # self.waypoint_lists = [
+        #     [22.8049050, 114.2949779, 45, 12, 1],
+        #     [22.8045625, 114.2951030, 50, 12, 1],
+        #     [22.8038427, 114.2951826, 50, 12, 1],
+        #     [22.8038427, 114.2951826, 50, 12, 1],
+        #     [22.8031613, 114.2952925, 50, 12, 1],
+        #     [22.8027001, 114.2954025, 50, 12, 1],
+        #     [22.8020886, 114.2955314, 50, 12, 1],
+        #     [22.8016413, 114.2956261, 40, 12, 1],
+        #     [22.8004497, 114.2959407, 40, 12, 1], # 下端航点
+        #     [22.8016413, 114.2956261, 40, 12, 1],
+        #     [22.8020886, 114.2955314, 40, 12, 1],
+        #     [22.8021165, 114.2955352, 30, 12, 1], # 跑道南端
+        #     [22.8027001, 114.2954025, 10, 12, 1],
+
+        #     [22.8029726, 114.2953532, 4, 12, 1],
+        #     [22.8031264, 114.2953077, 4, 12, 1], # 跑道北端
+        #     [22.8031613, 114.2952925, 4, 12, 1],
+        #     [22.8032557, 114.2952925, 4, 12, 1],
+        #     [22.8032836, 114.2952963, 4, 12, 1],
+        #     [22.8034304, 114.2952812, 4, 12, 1],
+        #     [22.8035806, 114.2952243, 4, 12, 1],
+
+        #     [22.8038427, 114.2951826, 30, 12, 1],
+            
+        # ]
+        # self.waypoint_lists = [
+        #     [22.8029679, 114.2939996, 45, 12, 1],
+        #     [22.8029580, 114.2945740, 45, 12, 1],
+        #     [22.8030174, 114.2949229, 40, 12, 1],
+        #     [22.8030570, 114.2953094, 40, 12, 1], # 跑道北端
+        #     [22.8031164, 114.2956583, 40, 12, 1],
+        #     [22.8031708, 114.2960717, 40, 12, 1],
+        #     [22.8032401, 114.2963562, 40, 12, 1],
+        #     [22.8032253, 114.2969252, 40, 12, 1], # 最东点
+        #     [22.8032401, 114.2963562, 30, 12, 1],
+        #     [22.8031708, 114.2960717, 20, 12, 1],
+        #     [22.8031164, 114.2956583, 10, 12, 1],
+        #     [22.8030570, 114.2953094, 5, 12, 1], # 跑道北端
+        #     [22.8020871, 114.2955188, 40, 12, 1] # 跑道南端
+        # ]
         self.waypoint_lists = [
-            [22.5917867, 113.9752335, 80, 12, 3],
-            [22.5915777, 113.9755941, 80, 12, 3],
-            [22.5912497, 113.9752591, 80, 12, 3],
-            [22.5909264, 113.9752896, 80, 12, 1],
-            [22.5904671, 113.9752947, 80, 12, 1],
-            [22.5899377, 113.9753048, 80, 12, 1],
-            [22.5896097, 113.9753099, 80, 12, 3],
-            [22.5892395, 113.9757920, 80, 12, 3],
-            [22.5888647, 113.9753353, 80, 12, 3],
-            [22.5892067, 113.9749699, 80, 12, 3],
-            [22.5896097, 113.9753099, 80, 12, 3],
-            [22.5899377, 113.9753048, 80, 12, 1],
-            [22.5904671, 113.9752947, 80, 12, 1],
-            [22.5909264, 113.9752896, 80, 12, 1],
-            [22.5912497, 113.9752591, 80, 12, 3],
-            [22.5915214, 113.9748887, 80, 12, 3]
+            # [22.8067582, 114.2962184, 45, 12, 1], 
+            [22.8064493, 114.2961178, 60, 12, 1],
+            [22.8055896, 114.2959782, 60, 12, 1],
+            [22.8048929, 114.2955671, 60, 12, 1],
+            [22.8043288, 114.2956422, 60, 12, 1],
+            [22.8037597, 114.2954812, 60, 12, 1],
+            [22.8030570, 114.2953094, 60, 12, 1], # 跑道北端
+            [22.8025875, 114.2951216, 40, 12, 1],
+            [22.8022891, 114.2949955, 40, 12, 1],
+            [22.8017785, 114.2948254, 40, 12, 1], 
+
+            [22.8012859, 114.2944258, 40, 12, 1], # 最左下
+            [22.8022891, 114.2949955, 30, 12, 1],
+            [22.8025875, 114.2951216, 20, 12, 1],
+            [22.8030570, 114.2953094, 10, 12, 1], # 跑道北端
+            
+            [22.8031668, 114.2954432, 10, 12, 1],
+            [22.8032515, 114.2955101, 10, 12, 1],
+            [22.8033363, 114.2955770, 10, 12, 1],
+            [22.8041652, 114.2959103, 10, 12, 1],
+            [22.8037597, 114.2954812, 40, 12, 1],
+            [22.8020871, 114.2955188, 40, 12, 1] # 跑道南端
         ]
 
 
@@ -141,6 +236,9 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_auto_bomb_off = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_auto_bomb_off.setGeometry(QtCore.QRect(2240, 840, 320, 40))
         self.pushButton_auto_bomb_off.setObjectName("pushButton_auto_bomb_off")
+        self.pushButton_control = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_control.setGeometry(QtCore.QRect(1920, 880, 320, 40))
+        self.pushButton_control.setObjectName("pushButton_control")
         # self.pushButton_18 = QtWidgets.QPushButton(self.centralwidget)
         # self.pushButton_18.setGeometry(QtCore.QRect(350, 910, 260, 30))
         # self.pushButton_18.setObjectName("pushButton_18")
@@ -272,6 +370,7 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_refresh_data.setText(_translate("MainWindow", "开启数据追踪"))
         self.pushButton_auto_bomb_on.setText(_translate("MainWindow", "开启自动投弹"))
         self.pushButton_auto_bomb_off.setText(_translate("MainWindow", "关闭自动投弹"))
+        self.pushButton_control.setText(_translate("MainWindow", "control"))
         # self.pushButton_18.setText(_translate("MainWindow", "相机向前"))
         # self.pushButton_19.setText(_translate("MainWindow", "相机向下"))
         # self.pushButton_20.setText(_translate("MainWindow", "左45"))
@@ -324,6 +423,7 @@ class Ui_MainWindow(QMainWindow):
         self.pushButton_refresh_data.clicked.connect(lambda: start_refresh(self.drone, self.loop, self))
         self.pushButton_auto_bomb_on.clicked.connect(lambda: auto_bomb_begin())
         self.pushButton_auto_bomb_off.clicked.connect(lambda: auto_bomb_end())
+        # self.pushButton_control.clicked.connect(self.ControlFunction)
         # self.pushButton_18.clicked.connect(lambda: self.rudder_control(-0.6))
         # self.pushButton_19.clicked.connect(lambda: self.rudder_control(0))
         # self.pushButton_20.clicked.connect(lambda: self.go_deg(-45, 0))
@@ -339,5 +439,8 @@ class Ui_MainWindow(QMainWindow):
     
     def set_lim(self, x, y):
         # print("in set_lim")
-        self.canvas.axes.set_xlim(x-0.0015, x+0.0015)
-        self.canvas.axes.set_ylim(y-0.0015, y+0.0015)
+        self.canvas.axes.set_xlim(x-0.003, x+0.003)
+        self.canvas.axes.set_ylim(y-0.003, y+0.003)
+
+    # def ControlFunction(self) :
+    #     ControlWindow(self, self.loop, self.drone)
